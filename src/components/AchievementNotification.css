@@ -1,0 +1,134 @@
+.achievement-notification {
+  position: fixed;
+  top: 100px;
+  right: 20px;
+  width: 400px;
+  background: linear-gradient(135deg, rgba(20, 20, 20, 0.98), rgba(40, 40, 40, 0.98));
+  border: 3px solid;
+  border-radius: 16px;
+  padding: 1.5rem;
+  z-index: 10000;
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+}
+
+.achievement-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 200%;
+  height: 200%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.achievement-content {
+  position: relative;
+  z-index: 1;
+}
+
+.achievement-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.achievement-people {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  justify-content: center;
+}
+
+.person-badge {
+  padding: 0.4rem 0.8rem;
+  background: linear-gradient(135deg, rgba(229, 9, 20, 0.3), rgba(229, 9, 20, 0.15));
+  border-radius: 8px;
+  border: 1px solid rgba(229, 9, 20, 0.4);
+}
+
+.person-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 10px rgba(229, 9, 20, 0.6);
+}
+
+.achievement-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #ffd700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.achievement-rarity {
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.5);
+  text-shadow: 0 0 10px currentColor;
+}
+
+.achievement-body {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.achievement-icon {
+  font-size: 4rem;
+  filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.6));
+}
+
+.achievement-info {
+  flex: 1;
+}
+
+.achievement-title {
+  font-size: 1.4rem;
+  font-weight: 900;
+  margin: 0 0 0.5rem 0;
+  text-shadow: 0 0 15px currentColor;
+}
+
+.achievement-description {
+  font-size: 0.9rem;
+  color: #b3b3b3;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.achievement-particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.particle {
+  position: absolute;
+  bottom: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  box-shadow: 0 0 10px currentColor;
+}
+
+@media (max-width: 768px) {
+  .achievement-notification {
+    width: calc(100% - 40px);
+    right: 20px;
+    left: 20px;
+  }
+}
