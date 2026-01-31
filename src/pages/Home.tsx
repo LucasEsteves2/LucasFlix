@@ -7,7 +7,6 @@ import { Row } from '../components/Row';
 import { Card } from '../components/Card';
 import { Badge } from '../components/Badge';
 import './Home.css';
-
 // Avatar imports
 import DiegoAvatar from '../imgs/DiegoAvatar.png';
 import LucasAvatar from '../imgs/LucasAvatar.png';

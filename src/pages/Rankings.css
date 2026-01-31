@@ -13,9 +13,9 @@
 
 .sleep-cards-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2rem;
-  padding: 0 3rem 1rem 3rem;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  padding: 0 1rem 1rem 1rem;
 }
 
 .rankings-page::before {
@@ -169,7 +169,7 @@
 
 .card {
   position: relative;
-  padding: 2rem;
+  padding: 1.2rem;
 }
 
 .card h3 {
@@ -374,7 +374,7 @@
 /* Avatar com glow */
 .sleep-avatar-container {
   position: relative;
-  margin-top: 1.5rem;
+  margin-top: 0.8rem;
   z-index: 5;
 }
 
@@ -393,18 +393,18 @@
 
 .sleep-avatar {
   position: relative;
-  width: 110px;
-  height: 110px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
-  border: 5px solid #9c27b0;
-  box-shadow: 0 0 30px rgba(156, 39, 176, 0.6), inset 0 0 20px rgba(0, 0, 0, 0.3);
+  border: 4px solid #9c27b0;
+  box-shadow: 0 0 20px rgba(156, 39, 176, 0.6), inset 0 0 15px rgba(0, 0, 0, 0.3);
   object-fit: cover;
 }
 
 /* Nome */
 .sleep-name {
-  margin: 1.5rem 0 0.75rem;
-  font-size: 1.8rem;
+  margin: 1rem 0 0.5rem;
+  font-size: 1.3rem;
   font-weight: 900;
   color: #fff;
   text-shadow: 0 0 20px rgba(156, 39, 176, 0.8);
@@ -415,14 +415,14 @@
 .sleep-king-badge {
   background: linear-gradient(135deg, #ffd700, #ff8c00);
   color: #000;
-  padding: 0.5rem 1.4rem;
+  padding: 0.4rem 1rem;
   border-radius: 25px;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 1px;
   box-shadow: 0 0 30px rgba(255, 215, 0, 0.7);
-  margin-bottom: 1rem;
+  margin-bottom: 0.6rem;
   z-index: 5;
 }
 
@@ -430,9 +430,9 @@
 .sleep-stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
+  gap: 0.6rem;
   width: 100%;
-  margin: 1.5rem 0;
+  margin: 1rem 0;
   z-index: 5;
 }
 
@@ -441,11 +441,11 @@
   backdrop-filter: blur(10px);
   border: 1px solid rgba(156, 39, 176, 0.4);
   border-radius: 12px;
-  padding: 1.25rem 0.75rem;
+  padding: 0.8rem 0.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.3rem;
   transition: all 0.3s ease;
 }
 
@@ -456,12 +456,12 @@
 }
 
 .sleep-stat-icon-big {
-  font-size: 2.5rem;
+  font-size: 1.8rem;
   filter: drop-shadow(0 0 10px rgba(156, 39, 176, 0.6));
 }
 
 .sleep-stat-value {
-  font-size: 2rem;
+  font-size: 1.4rem;
   font-weight: 900;
   color: #ba68c8;
   text-shadow: 0 0 15px rgba(186, 104, 200, 0.8);
@@ -469,7 +469,7 @@
 }
 
 .sleep-stat-label {
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   color: #999;
   font-weight: 600;
   text-transform: uppercase;
