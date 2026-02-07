@@ -4,6 +4,7 @@ import { Modal } from '../components/Modal';
 import { Card } from '../components/Card';
 import { Row } from '../components/Row';
 import { DailyMovie } from '../data/models';
+import { PageTransition } from '../components/PageTransition';
 import './DailyMovies.css';
 
 export const DailyMovies: React.FC = () => {
@@ -83,13 +84,14 @@ export const DailyMovies: React.FC = () => {
     });
 
   return (
-    <div className="daily-movies-page">
-      <div className="page-header">
-        <h1>🎬 Filmes do Dia</h1>
-        <button className="btn-primary" onClick={openModal}>
-          + Novo Filme
-        </button>
-      </div>
+    <PageTransition>
+      <div className="daily-movies-page">
+        <div className="page-header">
+          <h1>🎬 Filmes do Dia</h1>
+          <button className="btn-primary" onClick={openModal}>
+            + Novo Filme
+          </button>
+        </div>
 
       <Row title="Rei dos Filmes (Melhores Avaliados)">
         {rankedMovies.slice(0, 10).map((movie, index) => (
@@ -188,5 +190,6 @@ export const DailyMovies: React.FC = () => {
         </div>
       </Modal>
     </div>
+    </PageTransition>
   );
 };

@@ -4,6 +4,7 @@ import { Modal } from '../components/Modal';
 import { Card } from '../components/Card';
 import { Row } from '../components/Row';
 import { ShameEntry } from '../data/models';
+import { PageTransition } from '../components/PageTransition';
 import './ShameWall.css';
 
 export const ShameWall: React.FC = () => {
@@ -85,13 +86,14 @@ export const ShameWall: React.FC = () => {
   };
 
   return (
-    <div className="shame-wall-page">
-      <div className="page-header">
-        <h1>😴 Mural da Vergonha</h1>
-        <button className="btn-primary" onClick={() => openModal()}>
-          + Novo Registro
-        </button>
-      </div>
+    <PageTransition>
+      <div className="shame-wall-page">
+        <div className="page-header">
+          <h1>😴 Mural da Vergonha</h1>
+          <button className="btn-primary" onClick={() => openModal()}>
+            + Novo Registro
+          </button>
+        </div>
 
       <div className="filters">
         <label>
@@ -191,9 +193,12 @@ export const ShameWall: React.FC = () => {
           
           <div className="carousel-track" ref={carouselRef}>
             <div className="carousel-item">
-              <div className="sleep-card">
-                <div className="sleep-card-icon">💤</div>
-                <p>Fotos em breve...</p>
+              <div className="sleep-card sleep-card-photo special-card">
+                <div className="special-badge">⭐ Primeira Soneca Histórica</div>
+                <img src="/src/imgs/sonecas/sono1.jpg" alt="Momento do sono" />
+                <div className="sleep-card-overlay">
+                  <span className="sleep-card-date">😴 Primeira soneca registrada do LucasFlix</span>
+                </div>
               </div>
             </div>
             <div className="carousel-item">
@@ -228,5 +233,6 @@ export const ShameWall: React.FC = () => {
         </div>
       </div>
     </div>
+    </PageTransition>
   );
 };

@@ -1,61 +1,80 @@
+import { ref, set, get, onValue } from 'firebase/database';
+import { database } from '../firebaseConfig';
 import { IDataStore } from './IDataStore';
 import { LucasflixData } from './models';
 import { getSeedData } from './seed';
 
 /**
- * Firebase implementation of IDataStore (STUB - NOT YET IMPLEMENTED)
- * 
- * TODO: Implement Firebase integration
- * 
- * Steps to implement:
- * 1. Install firebase: npm install firebase
- * 2. Import and initialize Firebase:
- *    import { initializeApp } from 'firebase/app';
- *    import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
- * 
- * 3. Initialize Firebase with your config:
- *    const firebaseConfig = { ... };
- *    const app = initializeApp(firebaseConfig);
- *    const db = getFirestore(app);
- * 
- * 4. In load(): Use getDoc(doc(db, 'lucasflix', 'data'))
- * 5. In save(): Use setDoc(doc(db, 'lucasflix', 'data'), data)
- * 6. Handle authentication if needed
- * 
- * The interface is identical to LocalStorageDataStore, so switching
- * implementations will be seamless in the app code.
+ * Firebase Realtime Database implementation of IDataStore
  */
 export class FirebaseDataStore implements IDataStore {
-  // private db: Firestore; // Will be initialized in constructor
-  
-  constructor() {
-    // TODO: Initialize Firebase here
-    // this.db = getFirestore(app);
-    throw new Error('FirebaseDataStore not yet implemented');
-  }
+  private dataRef = ref(database, 'lucasflix');
 
+  /**
+   * Load data from Firebase Realtime Database
+   */
   async load(): Promise<LucasflixData> {
-    // TODO: Implement Firebase load
-    // const docRef = doc(this.db, 'lucasflix', 'data');
-    // const docSnap = await getDoc(docRef);
-    // if (docSnap.exists()) {
-    //   return docSnap.data() as LucasflixData;
-    // } else {
-    //   return this.resetToSeed();
-    // }
-    throw new Error('FirebaseDataStore not yet implemented');
+    try {
+      const snapshot = await get(this.dataRef);
+      
+      if (snapshot.exists()) {
+        const data = snapshot.val() as LucasflixData;
+        
+        // Garantir que arrays existam
+        return {
+          version: data.version || 1,
+          people: data.people || [],
+          sessions: data.sessions || [],
+          dailyMovies: data.dailyMovies || [],
+          votes: data.votes || [],
+          shameWall: data.shameWall || []
+        };
+      } else {
+        // No data exists, initialize with seed data
+        const seedData = getSeedData();
+        await this.save(seedData);
+        return seedData;
+      }
+    } catch (error) {
+      console.error('Error loading data from Firebase:', error);
+      // Fallback to seed data on error
+      return getSeedData();
+    }
   }
 
+  /**
+   * Save data to Firebase Realtime Database
+   */
   async save(data: LucasflixData): Promise<void> {
-    // TODO: Implement Firebase save
-    // const docRef = doc(this.db, 'lucasflix', 'data');
-    // await setDoc(docRef, data);
-    throw new Error('FirebaseDataStore not yet implemented');
+    try {
+      await set(this.dataRef, data);
+      console.log('Data saved to Firebase successfully');
+    } catch (error) {
+      console.error('Error saving data to Firebase:', error);
+      throw error;
+    }
   }
 
+  /**
+   * Reset to seed data
+   */
   async resetToSeed(): Promise<LucasflixData> {
-    const seed = getSeedData();
-    await this.save(seed);
-    return seed;
+    const seedData = getSeedData();
+    await this.save(seedData);
+    return seedData;
+  }
+
+  /**
+   * Listen to real-time changes in Firebase
+   */
+  subscribe(callback: (data: LucasflixData) => void): () => void {
+    const unsubscribe = onValue(this.dataRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val() as LucasflixData;
+        callback(data);
+      }
+    });
+
+    return unsubscribe;
   }
 }

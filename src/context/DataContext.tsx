@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { LucasflixData, Person, Session, DailyMovie, Vote, ShameEntry, PersonStats } from '../data/models';
 import { IDataStore } from '../data/IDataStore';
-import { LocalStorageDataStore } from '../data/LocalStorageDataStore';
+import { FirebaseDataStore } from '../data/FirebaseDataStore';
+// import { LocalStorageDataStore } from '../data/LocalStorageDataStore';
 
 interface DataContextType {
   data: LucasflixData;
@@ -31,6 +32,9 @@ interface DataContextType {
   addDailyMovie: (movie: Omit<DailyMovie, 'id'>) => void;
   updateDailyMovie: (id: string, movie: Partial<DailyMovie>) => void;
   deleteDailyMovie: (id: string) => void;
+  addDailyMovies: (dateISO: string, movieTitles: string[]) => void;
+  getTodayMovies: () => string[];
+  clearTodayMovies: () => void;
   
   // Votes
   votes: Vote[];
@@ -48,8 +52,9 @@ interface DataContextType {
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-// Initialize data store (can be switched to Firebase later)
-const dataStore: IDataStore = new LocalStorageDataStore();
+// Initialize Firebase data store
+const dataStore: IDataStore = new FirebaseDataStore();
+// To switch back to localStorage: new LocalStorageDataStore();
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [data, setData] = useState<LucasflixData>({
@@ -267,31 +272,25 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Atualiza stats de uma pessoa específica
   const updatePersonStats = (personId: string, stats: PersonStats) => {
-    const storedData = localStorage.getItem('lucasflix_data');
-    const currentData = storedData ? JSON.parse(storedData) : data;
-    
-    const updatedPeople = currentData.people.map(person => 
+    const updatedPeople = data.people.map(person => 
       person.id === personId 
         ? { ...person, stats, lastUpdated: new Date().toISOString() }
         : person
     );
-    const updatedData = { ...currentData, people: updatedPeople };
-    localStorage.setItem('lucasflix_data', JSON.stringify(updatedData));
+    const updatedData = { ...data, people: updatedPeople };
+    setData(updatedData);
     saveData(updatedData);
   };
 
   // Recalcula stats de todas as pessoas
   const recalculateAllStats = () => {
-    const storedData = localStorage.getItem('lucasflix_data');
-    const currentData = storedData ? JSON.parse(storedData) : data;
-    
-    const updatedPeople = currentData.people.map(person => ({
+    const updatedPeople = data.people.map(person => ({
       ...person,
-      stats: calculatePersonStats(person.id, currentData.sessions),
+      stats: calculatePersonStats(person.id, data.sessions),
       lastUpdated: new Date().toISOString(),
     }));
-    const updatedData = { ...currentData, people: updatedPeople };
-    localStorage.setItem('lucasflix_data', JSON.stringify(updatedData));
+    const updatedData = { ...data, people: updatedPeople };
+    setData(updatedData);
     saveData(updatedData);
   };
 
@@ -326,164 +325,143 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     
     const finalData = { ...updatedData, people: updatedPeople };
     
-    console.log('💾 Salvando no localStorage...');
-    // Salva no localStorage IMEDIATAMENTE de forma síncrona
-    localStorage.setItem('lucasflix_data', JSON.stringify(finalData));
+    console.log('💾 Salvando no Firebase...');
     
-    // LOG CRÍTICO: Mostra o que foi salvo
+    // LOG CRÍTICO: Mostra o que será salvo
     const savedPeople = finalData.people.map((p: any) => ({
       name: p.name,
       totalSessions: p.stats.totalSessions,
       totalSurvived: p.stats.totalSurvived,
       totalSlept: p.stats.totalSlept
     }));
-    console.log('💾 DADOS SALVOS NO LOCALSTORAGE:', savedPeople);
+    console.log('💾 DADOS SALVOS NO FIREBASE:', savedPeople);
     
-    // Verifica SE REALMENTE salvou IMEDIATAMENTE
-    const verifyData = JSON.parse(localStorage.getItem('lucasflix_data') || '{}');
-    const verifyPeople = verifyData.people?.map((p: any) => ({
-      name: p.name,
-      survived: p.stats.totalSurvived
-    }));
-    console.log('✅ VERIFICAÇÃO IMEDIATA - O que está NO LOCALSTORAGE agora:', verifyPeople);
+    // Atualiza contexto e salva no Firebase
+    setData(finalData);
+    saveData(finalData);
     
-    // MARCA que acabamos de salvar
-    (window as any).__lucasflix_last_save = Date.now();
-    
-    console.log('💾 Atualizando contexto React...');
-    // NÃO CHAMA setData() aqui para evitar efeitos colaterais que possam sobrescrever!
-    // O contexto será atualizado naturalmente quando componentes lerem do localStorage
-    // setData(finalData); // REMOVIDO TEMPORARIAMENTE
-    
-    // DISPARA EVENTO GLOBAL para forçar atualização em todos os componentes
-    window.dispatchEvent(new CustomEvent('lucasflix-data-updated', { detail: finalData }));
-    
-    console.log('✅ Sessão salva com sucesso!');
+    console.log('✅ Sessão salva com sucesso no Firebase!');
     return newSession;
   };
 
   const updateSession = (id: string, updates: Partial<Session>) => {
-    const storedData = localStorage.getItem('lucasflix_data');
-    const currentData = storedData ? JSON.parse(storedData) : data;
-    
-    const updated = currentData.sessions.map(s => s.id === id ? { ...s, ...updates } : s);
-    const updatedData = { ...currentData, sessions: updated };
-    localStorage.setItem('lucasflix_data', JSON.stringify(updatedData));
+    const updated = data.sessions.map(s => s.id === id ? { ...s, ...updates } : s);
+    const updatedData = { ...data, sessions: updated };
+    setData(updatedData);
     saveData(updatedData);
   };
 
   const deleteSession = (id: string) => {
-    const storedData = localStorage.getItem('lucasflix_data');
-    const currentData = storedData ? JSON.parse(storedData) : data;
-    
-    const filtered = currentData.sessions.filter(s => s.id !== id);
-    const updatedData = { ...currentData, sessions: filtered };
-    localStorage.setItem('lucasflix_data', JSON.stringify(updatedData));
+    const filtered = data.sessions.filter(s => s.id !== id);
+    const updatedData = { ...data, sessions: filtered };
+    setData(updatedData);
     saveData(updatedData);
   };
 
   // Shame Wall
   const addShameEntry = (entry: Omit<ShameEntry, 'id'>) => {
     const newEntry: ShameEntry = { ...entry, id: generateId() };
-    
-    // LÊ do localStorage para não sobrescrever sessões recém-salvas
-    const storedData = localStorage.getItem('lucasflix_data');
-    const currentData = storedData ? JSON.parse(storedData) : data;
-    
-    const updatedData = { ...currentData, shameWall: [...currentData.shameWall, newEntry] };
-    localStorage.setItem('lucasflix_data', JSON.stringify(updatedData));
+    const updatedData = { ...data, shameWall: [...data.shameWall, newEntry] };
+    setData(updatedData);
     
     // Atualiza via dataStore também
     saveData(updatedData);
   };
 
   const updateShameEntry = (id: string, updates: Partial<ShameEntry>) => {
-    const storedData = localStorage.getItem('lucasflix_data');
-    const currentData = storedData ? JSON.parse(storedData) : data;
-    
-    const updated = currentData.shameWall.map(e => e.id === id ? { ...e, ...updates } : e);
-    const updatedData = { ...currentData, shameWall: updated };
-    localStorage.setItem('lucasflix_data', JSON.stringify(updatedData));
+    const updated = data.shameWall.map(e => e.id === id ? { ...e, ...updates } : e);
+    const updatedData = { ...data, shameWall: updated };
+    setData(updatedData);
     saveData(updatedData);
   };
 
   const deleteShameEntry = (id: string) => {
-    const storedData = localStorage.getItem('lucasflix_data');
-    const currentData = storedData ? JSON.parse(storedData) : data;
-    
-    const filtered = currentData.shameWall.filter(e => e.id !== id);
-    const updatedData = { ...currentData, shameWall: filtered };
-    localStorage.setItem('lucasflix_data', JSON.stringify(updatedData));
+    const filtered = data.shameWall.filter(e => e.id !== id);
+    const updatedData = { ...data, shameWall: filtered };
+    setData(updatedData);
     saveData(updatedData);
   };
 
   // Daily Movies
   const addDailyMovie = (movie: Omit<DailyMovie, 'id'>) => {
-    const storedData = localStorage.getItem('lucasflix_data');
-    const currentData = storedData ? JSON.parse(storedData) : data;
-    
     const newMovie: DailyMovie = { ...movie, id: generateId() };
-    const updatedData = { ...currentData, dailyMovies: [...currentData.dailyMovies, newMovie] };
-    localStorage.setItem('lucasflix_data', JSON.stringify(updatedData));
+    const updatedData = { ...data, dailyMovies: [...data.dailyMovies, newMovie] };
+    setData(updatedData);
     saveData(updatedData);
   };
 
   const updateDailyMovie = (id: string, updates: Partial<DailyMovie>) => {
-    const storedData = localStorage.getItem('lucasflix_data');
-    const currentData = storedData ? JSON.parse(storedData) : data;
-    
-    const updated = currentData.dailyMovies.map(m => m.id === id ? { ...m, ...updates } : m);
-    const updatedData = { ...currentData, dailyMovies: updated };
-    localStorage.setItem('lucasflix_data', JSON.stringify(updatedData));
+    const updated = data.dailyMovies.map(m => m.id === id ? { ...m, ...updates } : m);
+    const updatedData = { ...data, dailyMovies: updated };
+    setData(updatedData);
     saveData(updatedData);
   };
 
   const deleteDailyMovie = (id: string) => {
-    const storedData = localStorage.getItem('lucasflix_data');
-    const currentData = storedData ? JSON.parse(storedData) : data;
-    
-    const filtered = currentData.dailyMovies.filter(m => m.id !== id);
-    const filteredVotes = currentData.votes.filter(v => v.dailyMovieId !== id);
-    const updatedData = { ...currentData, dailyMovies: filtered, votes: filteredVotes };
-    localStorage.setItem('lucasflix_data', JSON.stringify(updatedData));
+    const filtered = data.dailyMovies.filter(m => m.id !== id);
+    const filteredVotes = data.votes.filter(v => v.dailyMovieId !== id);
+    const updatedData = { ...data, dailyMovies: filtered, votes: filteredVotes };
+    setData(updatedData);
     saveData(updatedData);
   };
 
   // Votes
   const addVote = (vote: Omit<Vote, 'id'>) => {
-    const storedData = localStorage.getItem('lucasflix_data');
-    const currentData = storedData ? JSON.parse(storedData) : data;
-    
     // Remove existing vote from same person for same movie
-    const filtered = currentData.votes.filter(v => 
+    const filtered = data.votes.filter(v => 
       !(v.dailyMovieId === vote.dailyMovieId && v.personId === vote.personId)
     );
     const newVote: Vote = { ...vote, id: generateId() };
-    const updatedData = { ...currentData, votes: [...filtered, newVote] };
-    localStorage.setItem('lucasflix_data', JSON.stringify(updatedData));
+    const updatedData = { ...data, votes: [...filtered, newVote] };
+    setData(updatedData);
     saveData(updatedData);
   };
 
   const updateVote = (id: string, updates: Partial<Vote>) => {
-    const storedData = localStorage.getItem('lucasflix_data');
-    const currentData = storedData ? JSON.parse(storedData) : data;
-    
-    const updated = currentData.votes.map(v => v.id === id ? { ...v, ...updates } : v);
-    const updatedData = { ...currentData, votes: updated };
-    localStorage.setItem('lucasflix_data', JSON.stringify(updatedData));
+    const updated = data.votes.map(v => v.id === id ? { ...v, ...updates } : v);
+    const updatedData = { ...data, votes: updated };
+    setData(updatedData);
     saveData(updatedData);
   };
 
   const deleteVote = (id: string) => {
-    const storedData = localStorage.getItem('lucasflix_data');
-    const currentData = storedData ? JSON.parse(storedData) : data;
+    const filtered = data.votes.filter(v => v.id !== id);
+    const updatedData = { ...data, votes: filtered };
+    setData(updatedData);
+    saveData(updatedData);
+  };
+  const addDailyMovies = (dateISO: string, movieTitles: string[]) => {
+    const createdAtISO = new Date().toISOString();
+    const newMovies: DailyMovie[] = movieTitles.map(title => ({
+      id: generateId(),
+      title: title.trim(),
+      dateISO,
+      createdByPersonId: 'p4', // Lucas (default user for bulk imports)
+      createdAtISO,
+    }));
     
-    const filtered = currentData.votes.filter(v => v.id !== id);
-    const updatedData = { ...currentData, votes: filtered };
+    const updatedData = { ...data, dailyMovies: [...data.dailyMovies, ...newMovies] };
     localStorage.setItem('lucasflix_data', JSON.stringify(updatedData));
     saveData(updatedData);
   };
 
+  const getTodayMovies = (): string[] => {
+    const today = new Date().toISOString().split('T')[0];
+    return data.dailyMovies
+      .filter(movie => movie.dateISO === today)
+      .map(movie => movie.title);
+  };
+
+  const clearTodayMovies = () => {
+    const storedData = localStorage.getItem('lucasflix_data');
+    const currentData = storedData ? JSON.parse(storedData) : data;
+    
+    const today = new Date().toISOString().split('T')[0];
+    const filtered = currentData.dailyMovies.filter(m => m.dateISO !== today);
+    const updatedData = { ...currentData, dailyMovies: filtered };
+    localStorage.setItem('lucasflix_data', JSON.stringify(updatedData));
+    saveData(updatedData);
+  };
   const getVotesForMovie = (dailyMovieId: string) => {
     return data.votes.filter(v => v.dailyMovieId === dailyMovieId);
   };
@@ -567,6 +545,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     addDailyMovie,
     updateDailyMovie,
     deleteDailyMovie,
+    addDailyMovies,
+    getTodayMovies,
+    clearTodayMovies,
     votes: data.votes,
     addVote,
     updateVote,

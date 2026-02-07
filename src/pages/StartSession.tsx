@@ -7,8 +7,15 @@ import { useAlternativeMode } from '../context/AlternativeModeContext';
 import { useAchievements } from '../hooks/useAchievements';
 import { Badge } from '../components/Badge';
 import { AchievementNotification } from '../components/AchievementNotification';
+import { PageTransition } from '../components/PageTransition';
+import { ShameCard } from '../components/ShameCard';
+import { SurvivorCard } from '../components/SurvivorCard';
+import { KingCard } from '../components/KingCard';
+import { AwardCard } from '../components/AwardCard';
+import { SessionSummaryCard } from '../components/SessionSummaryCard';
 import { Achievement } from '../data/achievements';
 import './StartSession.css';
+import './Awards.css';
 
 // Avatar imports
 import DiegoAvatar from '../imgs/DiegoAvatar.png';
@@ -93,6 +100,16 @@ export const StartSession: React.FC = () => {
   const [sleepTimers, setSleepTimers] = useState<Record<string, string>>({});
   const [showAlternativeModal, setShowAlternativeModal] = useState(false);
   const [showDishToast, setShowDishToast] = useState(false);
+  // Rastreia tempo até primeiro cochilo e duração de cada cochilo individual
+  const [firstSleepDelay, setFirstSleepDelay] = useState<Record<string, number>>({});
+  const [individualNapDurations, setIndividualNapDurations] = useState<Record<string, number[]>>({});
+  // Estado para Shame Card
+  const [shameCardPerson, setShameCardPerson] = useState<string | null>(null);
+  // Estados para novos cards
+  const [showSurvivorCard, setShowSurvivorCard] = useState(false);
+  const [showKingCard, setShowKingCard] = useState<{ type: 'sleep' | 'nap'; personId: string } | null>(null);
+  const [showAwardCard, setShowAwardCard] = useState<{ type: 'fastest' | 'longest' | 'flexoes' | 'coruja'; personId: string; stat: string } | null>(null);
+  const [showSessionSummaryCard, setShowSessionSummaryCard] = useState(false);
 
   // Timer da sessão
   useEffect(() => {
@@ -326,6 +343,16 @@ export const StartSession: React.FC = () => {
         ...prev,
         [personId]: (prev[personId] || 0) + 1
       }));
+      
+      // Registra tempo até primeiro cochilo (se for o primeiro)
+      if (!firstSleepDelay[personId] && awakeStartTimes[personId]) {
+        const timeUntilSleep = (now.getTime() - awakeStartTimes[personId].getTime()) / (1000 * 60); // em minutos
+        setFirstSleepDelay(prev => ({
+          ...prev,
+          [personId]: timeUntilSleep
+        }));
+      }
+      
       // Remove do rescued se estava
       setRescued(prev => prev.filter(id => id !== personId));
     }
@@ -341,6 +368,12 @@ export const StartSession: React.FC = () => {
       setTotalSleepTime(prev => ({
         ...prev,
         [personId]: (prev[personId] || 0) + sleepDuration
+      }));
+      
+      // Registra duração deste cochilo específico
+      setIndividualNapDurations(prev => ({
+        ...prev,
+        [personId]: [...(prev[personId] || []), sleepDuration]
       }));
       
       // Remove o timestamp de início do sono
@@ -422,28 +455,17 @@ export const StartSession: React.FC = () => {
       });
     });
 
-    // IMPORTANTE: NÃO aguarda - deixa o fluxo natural
-    // Os dados JÁ estão no localStorage, vamos ler direto de lá
+    // IMPORTANTE: Pequeno delay para garantir que o Firebase foi atualizado
+    await new Promise(resolve => setTimeout(resolve, 200));
     
     console.log('🔍 Verificando conquistas após sessão salva...');
-    
-    // Lê dados DIRETO DO LOCALSTORAGE - FONTE ÚNICA DA VERDADE
-    const storedData = localStorage.getItem('lucasflix_data');
-    if (!storedData) {
-      console.error('❌ Nenhum dado no localStorage!');
-      return;
-    }
-    
-    const freshData = JSON.parse(storedData);
-    const thiagoData = freshData.people?.find((p: any) => p.name === 'Thiago');
-    console.log('🔍 Thiago do localStorage:', thiagoData?.stats);
 
-    // Verifica conquistas para todos os participantes (AGORA os stats estão atualizados)
+    // Verifica conquistas para todos os participantes (AGORA os stats estão atualizados no Firebase)
     const allAchievementsToUnlock: { personId: string, achievementId: string, sessionId: string }[] = [];
     const achievementsByPerson: { personId: string, achievements: Achievement[] }[] = [];
     
     selectedParticipants.forEach(personId => {
-      const person = freshData.people?.find((p: any) => p.id === personId);
+      const person = people.find((p: any) => p.id === personId);
       console.log('🔍 Verificando', person?.name, '- Stats:', person?.stats);
       console.log('🔍 Conquistas já desbloqueadas:', person?.achievements.map((a: any) => a.achievementId));
       
@@ -471,8 +493,8 @@ export const StartSession: React.FC = () => {
       console.log('💾 Salvando todas as conquistas:', allAchievementsToUnlock);
       unlockMultipleAchievements(allAchievementsToUnlock);
       
-      // Pequeno delay para garantir que o localStorage foi atualizado
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Pequeno delay para garantir que o Firebase foi atualizado
+      await new Promise(resolve => setTimeout(resolve, 200));
     }
 
     console.log('🎯 Total de achievements encontrados:', achievementsByPerson.length);
@@ -544,28 +566,29 @@ export const StartSession: React.FC = () => {
   const getPerson = (id: string) => people.find(p => p.id === id);
 
   return (
-    <div className="start-session">
-      <AnimatePresence mode="wait">
-        {/* Step 1: Aquecimento */}
-        {step === 1 && !warmUpDone && (
-          <motion.div
-            key="warmup-select"
-            className="session-step"
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -50 }}
-            transition={{ duration: 0.6 }}
-          >
-            <div className="step-container">
-              <motion.div 
-                className="step-icon"
-                animate={{ rotate: [0, 10, -10, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                🎮
-              </motion.div>
-              <h1 className="step-title">Partida de Pes</h1>
-              <p className="step-subtitle">Quem vai jogar o aquecimento hoje?</p>
+    <PageTransition>
+      <div className="start-session">
+        <AnimatePresence mode="wait">
+          {/* Step 1: Aquecimento */}
+          {step === 1 && !warmUpDone && (
+            <motion.div
+              key="warmup-select"
+              className="session-step"
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -50 }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="step-container">
+                <motion.div 
+                  className="step-icon"
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  🎮
+                </motion.div>
+                <h1 className="step-title">Partida de Pes</h1>
+                <p className="step-subtitle">Quem vai jogar o aquecimento hoje?</p>
 
               <div className="players-grid">
                 {people.filter(p => !p.isAlternative).map((person, index) => (
@@ -1056,11 +1079,62 @@ export const StartSession: React.FC = () => {
                 return (
                   <motion.div
                     key={personId}
-                    className={`active-participant ${isAsleep ? 'asleep' : ''} ${isRescued ? 'rescued' : ''} ${isRecordHolder ? 'record-holder' : ''}`}
+                    className={`active-participant ${isAsleep ? 'asleep' : ''} ${isRescued ? 'rescued' : ''} ${isRecordHolder ? 'record-holder' : ''} ${person?.isAlternative ? 'alternative' : ''}`}
                     initial={{ opacity: 0, x: -50 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.15 }}
                   >
+                    {/* Animação de Z's subindo quando dormindo */}
+                    {isAsleep && (
+                      <>
+                        <div className="sleep-moon">🌙</div>
+                        <div className="sleep-zs-animation">
+                          {[...Array(15)].map((_, i) => {
+                            // Valores fixos baseados no índice (não randomizam a cada render)
+                            const baseDelay = i * 0.8; // Delay escalonado para criar fluxo contínuo
+                            const duration = 8;
+                            const size = 1.2 + (i % 4) * 0.3; // Tamanhos: 1.2, 1.5, 1.8, 2.1
+                            
+                            // Posições horizontais fixas espalhadas (esquerda, centro, direita)
+                            const positions = [20, 35, 50, 65, 80]; // 5 posições diferentes
+                            const startLeft = positions[i % 5]; // Distribui entre as 5 posições
+                            const horizontalDrift = ((i % 3) - 1) * 20; // Drift de -20, 0, ou 20
+                            
+                            return (
+                              <motion.div
+                                key={i}
+                                className="floating-z"
+                                style={{
+                                  left: `${startLeft}%`, // Posição inicial fixa horizontal
+                                  bottom: '-30px', // Todos começam embaixo
+                                  fontSize: `${size}rem`,
+                                }}
+                                initial={{ 
+                                  opacity: 0, 
+                                  y: 0,
+                                  x: 0
+                                }}
+                                animate={{
+                                  opacity: [0, 0.4, 0.4, 0],
+                                  y: [0, -350],
+                                  x: [0, horizontalDrift], // Drift sutil durante subida
+                                }}
+                                transition={{
+                                  duration: duration,
+                                  repeat: Infinity,
+                                  delay: baseDelay,
+                                  ease: "linear",
+                                  repeatDelay: 0
+                                }}
+                              >
+                                {i % 3 === 0 ? 'z' : i % 3 === 1 ? 'Z' : 'Zz'}
+                              </motion.div>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
+                    
                     <div className="participant-info">
                       <div className="participant-avatar-large-img">
                         <img src={getAvatar(person?.name || '')} alt={person?.name} />
@@ -1069,21 +1143,26 @@ export const StartSession: React.FC = () => {
                         {isRecordHolder && !isAsleep && <div className="record-overlay">🏆</div>}
                       </div>
                       <div className="participant-details">
-                        <h3>{person?.name}</h3>
+                        <div className="name-row">
+                          <h3>{person?.name}</h3>
+                          {isAsleep && <span className="sleep-message">{person?.isAlternative ? '🍽️ "Foi lavar a louça..."' : '🚶 "Vou ali e já volto..."'}</span>}
+                        </div>
                         <div className="badges-row">
                           {isAsleep && (
                             <>
-                              <Badge text="Dormindo..." variant="danger" />
                               {sleepTime && (
-                                <Badge text={`😴 ${sleepTime} dormindo`} variant="danger" />
+                                <Badge text={`😴 Dormindo ${sleepTime}`} variant="info" />
+                              )}
+                              {napCount > 0 && (
+                                <Badge text={`${napCount} cochilo${napCount > 1 ? 's' : ''} 💤`} variant="warning" />
                               )}
                             </>
                           )}
+                          {!isAsleep && napCount > 0 && (
+                            <Badge text={`${napCount} cochilo${napCount > 1 ? 's' : ''} 💤`} variant="warning" />
+                          )}
                           {isRescued && (
                             <Badge text="Resgatado!" variant="success" />
-                          )}
-                          {napCount > 0 && (
-                            <Badge text={`${napCount} cochilo${napCount > 1 ? 's' : ''} 😅`} variant="warning" />
                           )}
                           {awakeTime && !isAsleep && (
                             <Badge text={`⏱️ ${awakeTime} acordado`} variant="info" />
@@ -1211,6 +1290,15 @@ export const StartSession: React.FC = () => {
                         <Badge text={`${formatSleepTime(sleepKing[1])} dormindo 😴`} variant="danger" />
                         <Badge text={`${naps[sleepKing[0]] || 0} cochilo${(naps[sleepKing[0]] || 0) > 1 ? 's' : ''}`} variant="warning" />
                       </div>
+                      <motion.button
+                        className="btn-shame-card"
+                        onClick={() => setShowKingCard({ type: 'sleep', personId: sleepKing[0] })}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        style={{ marginTop: '1rem' }}
+                      >
+                        🃏 Gerar Card do Rei
+                      </motion.button>
                     </motion.div>
                   )}
 
@@ -1229,9 +1317,18 @@ export const StartSession: React.FC = () => {
                       <h2 className="sleep-king-title">Rei do Cochilo</h2>
                       <h3 className="sleep-king-name">{getPerson(napKing[0])?.name}</h3>
                       <div className="sleep-king-stats">
-                        <Badge text={`${napKing[1]} cochilo${napKing[1] > 1 ? 's' : ''} 😅`} variant="warning" />
+                        <Badge text={`${napKing[1]} cochilo${napKing[1] > 1 ? 's' : ''} 💤`} variant="warning" />
                         <Badge text={`${formatSleepTime(totalSleepTime[napKing[0]] || 0)} dormindo`} variant="info" />
                       </div>
+                      <motion.button
+                        className="btn-shame-card"
+                        onClick={() => setShowKingCard({ type: 'nap', personId: napKing[0] })}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        style={{ marginTop: '1rem' }}
+                      >
+                        🃏 Gerar Card do Rei
+                      </motion.button>
                     </motion.div>
                   )}
 
@@ -1263,6 +1360,14 @@ export const StartSession: React.FC = () => {
                               <Badge text={formatSleepTime(time)} variant="danger" size="small" />
                               <Badge text={`${naps[personId] || 0} 😴`} variant="warning" size="small" />
                             </div>
+                            <motion.button
+                              className="btn-shame-card"
+                              onClick={() => setShameCardPerson(personId)}
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              🃏 Gerar Card
+                            </motion.button>
                           </motion.div>
                         ))}
                       </div>
@@ -1280,6 +1385,15 @@ export const StartSession: React.FC = () => {
                       <div className="survivors-trophy">🎉</div>
                       <h2 className="survivors-title">Sobreviventes</h2>
                       <p className="survivors-subtitle">Ficaram acordados!</p>
+                      <motion.button
+                        className="btn-shame-card"
+                        onClick={() => setShowSurvivorCard(true)}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        style={{ marginBottom: '1rem', background: 'linear-gradient(135deg, #4ade80, #22c55e)' }}
+                      >
+                        🃏 Gerar Card dos Sobreviventes
+                      </motion.button>
                       <div className="survivors-grid">
                         {survivors.map((personId, index) => (
                           <motion.div
@@ -1299,6 +1413,157 @@ export const StartSession: React.FC = () => {
                     </motion.div>
                   )}
                 </div>
+
+                {/* AWARDS - Cerimônia do Cochilo */}
+                {sleepTimeEntries.length > 0 && (() => {
+                  // 🛌 Melhor Atuação - Quem dormiu mais rápido
+                  const fastestSleeper = Object.entries(firstSleepDelay)
+                    .filter(([_, time]) => time > 0)
+                    .sort((a, b) => a[1] - b[1])[0];
+                  
+                  // 🏃 Fuga Mais Épica - Cochilo mais longo
+                  let longestNap: [string, number] | null = null;
+                  Object.entries(individualNapDurations).forEach(([personId, naps]) => {
+                    const maxNap = Math.max(...naps);
+                    if (!longestNap || maxNap > longestNap[1]) {
+                      longestNap = [personId, maxNap];
+                    }
+                  });
+                  
+                  // 💪 Ressurreição do Ano - Mais flexões (mais cochilos)
+                  const mostFlexoes = sortedByNaps[0];
+                  
+                  // 🦉 Coruja de Ouro - Quem ficou mais tempo acordado (usa recordHolder já calculado)
+                  const corujaDeOuro = survivors.length > 0 ? survivors[0] : null;
+
+                  return (
+                    <motion.div
+                      className="awards-section"
+                      initial={{ opacity: 0, y: 30 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.7 }}
+                    >
+                      <motion.div 
+                        className="awards-header"
+                        animate={{ scale: [1, 1.05, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      >
+                        <h2 className="awards-title">🏆 CERIMÔNIA DO COCHILO 🏆</h2>
+                        <p className="awards-subtitle">Os Melhores e Piores da Noite</p>
+                      </motion.div>
+
+                      <div className="awards-grid">
+                        {/* 🛌 Melhor Atuação em Cena de Sono */}
+                        {fastestSleeper && (
+                          <motion.div
+                            className="award-card award-fastest"
+                            initial={{ scale: 0, rotate: -180 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            transition={{ delay: 0.8, type: "spring" }}
+                          >
+                            <div className="award-trophy">🛌</div>
+                            <h3 className="award-name">Melhor Atuação em Cena de Sono</h3>
+                            <div className="award-winner-avatar-img">
+                              <img src={getAvatar(getPerson(fastestSleeper[0])?.name || '')} alt="" />
+                            </div>
+                            <p className="award-winner">{getPerson(fastestSleeper[0])?.name}</p>
+                            <p className="award-stat">Dormiu em {formatSleepTime(fastestSleeper[1])} ⚡</p>
+                            <motion.button
+                              className="btn-shame-card"
+                              onClick={() => setShowAwardCard({ type: 'fastest', personId: fastestSleeper[0], stat: formatSleepTime(fastestSleeper[1]) })}
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              style={{ marginTop: '0.75rem', fontSize: '0.85rem', padding: '0.5rem 1rem' }}
+                            >
+                              🃏 Gerar Card
+                            </motion.button>
+                          </motion.div>
+                        )}
+
+                        {/* 🏃 Fuga Mais Épica */}
+                        {longestNap && (
+                          <motion.div
+                            className="award-card award-longest"
+                            initial={{ scale: 0, rotate: 180 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            transition={{ delay: 0.9, type: "spring" }}
+                          >
+                            <div className="award-trophy">🏃</div>
+                            <h3 className="award-name">Fuga Mais Épica</h3>
+                            <div className="award-winner-avatar-img">
+                              <img src={getAvatar(getPerson(longestNap[0])?.name || '')} alt="" />
+                            </div>
+                            <p className="award-winner">{getPerson(longestNap[0])?.name}</p>
+                            <p className="award-stat">"Vou ali" durou {formatSleepTime(longestNap[1])} 🚪</p>
+                            <motion.button
+                              className="btn-shame-card"
+                              onClick={() => setShowAwardCard({ type: 'longest', personId: longestNap[0], stat: formatSleepTime(longestNap[1]) })}
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              style={{ marginTop: '0.75rem', fontSize: '0.85rem', padding: '0.5rem 1rem' }}
+                            >
+                              🃏 Gerar Card
+                            </motion.button>
+                          </motion.div>
+                        )}
+
+                        {/* 💪 Ressurreição do Ano */}
+                        {mostFlexoes && (
+                          <motion.div
+                            className="award-card award-flexoes"
+                            initial={{ scale: 0, rotate: -180 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            transition={{ delay: 1.0, type: "spring" }}
+                          >
+                            <div className="award-trophy">💪</div>
+                            <h3 className="award-name">Ressurreição do Ano</h3>
+                            <div className="award-winner-avatar-img">
+                              <img src={getAvatar(getPerson(mostFlexoes[0])?.name || '')} alt="" />
+                            </div>
+                            <p className="award-winner">{getPerson(mostFlexoes[0])?.name}</p>
+                            <p className="award-stat">{mostFlexoes[1] * 5} flexões realizadas 🔥</p>
+                            <motion.button
+                              className="btn-shame-card"
+                              onClick={() => setShowAwardCard({ type: 'flexoes', personId: mostFlexoes[0], stat: `${mostFlexoes[1] * 5} flexões` })}
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              style={{ marginTop: '0.75rem', fontSize: '0.85rem', padding: '0.5rem 1rem' }}
+                            >
+                              🃏 Gerar Card
+                            </motion.button>
+                          </motion.div>
+                        )}
+
+                        {/* 🦉 Coruja de Ouro */}
+                        {corujaDeOuro && (
+                          <motion.div
+                            className="award-card award-coruja"
+                            initial={{ scale: 0, rotate: 180 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            transition={{ delay: 1.1, type: "spring" }}
+                          >
+                            <div className="award-trophy">🦉</div>
+                            <h3 className="award-name">Coruja de Ouro</h3>
+                            <div className="award-winner-avatar-img">
+                              <img src={getAvatar(getPerson(corujaDeOuro)?.name || '')} alt="" />
+                            </div>
+                            <p className="award-winner">{getPerson(corujaDeOuro)?.name}</p>
+                            <p className="award-stat">Resistiu a sessão toda! 🌙</p>
+                            <motion.button
+                              className="btn-shame-card"
+                              onClick={() => setShowAwardCard({ type: 'coruja', personId: corujaDeOuro, stat: 'Resistência Total' })}
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              style={{ marginTop: '0.75rem', fontSize: '0.85rem', padding: '0.5rem 1rem' }}
+                            >
+                              🃏 Gerar Card
+                            </motion.button>
+                          </motion.div>
+                        )}
+                      </div>
+                    </motion.div>
+                  );
+                })()}
 
                 {/* Gráficos */}
                 {napChartData.length > 0 && (
@@ -1368,6 +1633,24 @@ export const StartSession: React.FC = () => {
                 )}
 
                 <motion.button
+                  className="btn-shame-card"
+                  onClick={() => setShowSessionSummaryCard(true)}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.9 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  style={{ 
+                    marginBottom: '1rem',
+                    background: 'linear-gradient(135deg, #e50914, #ff4444)',
+                    fontSize: '1.1rem',
+                    padding: '1rem 2rem'
+                  }}
+                >
+                  🎬 Gerar Resumo Completo da Sessão
+                </motion.button>
+                
+                <motion.button
                   className="btn-confirm-end"
                   onClick={handleConfirmEnd}
                   initial={{ opacity: 0, y: 20 }}
@@ -1384,6 +1667,200 @@ export const StartSession: React.FC = () => {
         })()}
       </AnimatePresence>
 
+      {/* Shame Card Modal */}
+      <AnimatePresence>
+        {shameCardPerson && (() => {
+          const person = getPerson(shameCardPerson);
+          const sleepTimeEntry = sleepTimes.find(st => st.personId === shameCardPerson);
+          
+          return person && sleepTimeEntry ? (
+            <ShameCard
+              personName={person.name}
+              personAvatar={getAvatar(person.name)}
+              totalSleepTime={totalSleepTime[shameCardPerson] || 0}
+              napCount={naps[shameCardPerson] || 0}
+              sleepTime={sleepTimeEntry.time}
+              isKing={sleepTimes[0]?.personId === shameCardPerson}
+              onClose={() => setShameCardPerson(null)}
+            />
+          ) : null;
+        })()}
+      </AnimatePresence>
+
+      {/* Survivor Card Modal */}
+      <AnimatePresence>
+        {showSurvivorCard && (() => {
+          const survivors = selectedParticipants.filter(personId => !naps[personId] || naps[personId] === 0);
+          return survivors.length > 0 ? (
+            <SurvivorCard
+              survivors={survivors.map(personId => ({
+                name: getPerson(personId)?.name || '',
+                avatar: getAvatar(getPerson(personId)?.name || '')
+              }))}
+              sessionDuration={elapsedTime}
+              onClose={() => setShowSurvivorCard(false)}
+            />
+          ) : null;
+        })()}
+      </AnimatePresence>
+
+      {/* King Card Modal */}
+      <AnimatePresence>
+        {showKingCard && (() => {
+          const person = getPerson(showKingCard.personId);
+          return person ? (
+            <KingCard
+              kingName={person.name}
+              kingAvatar={getAvatar(person.name)}
+              kingType={showKingCard.type}
+              totalSleepTime={totalSleepTime[showKingCard.personId] || 0}
+              napCount={naps[showKingCard.personId] || 0}
+              onClose={() => setShowKingCard(null)}
+            />
+          ) : null;
+        })()}
+      </AnimatePresence>
+
+      {/* Award Card Modal */}
+      <AnimatePresence>
+        {showAwardCard && (() => {
+          const person = getPerson(showAwardCard.personId);
+          return person ? (
+            <AwardCard
+              awardType={showAwardCard.type}
+              winnerName={person.name}
+              winnerAvatar={getAvatar(person.name)}
+              statValue={showAwardCard.stat}
+              onClose={() => setShowAwardCard(null)}
+            />
+          ) : null;
+        })()}
+      </AnimatePresence>
+
+      {/* Session Summary Card Modal */}
+      <AnimatePresence>
+        {showSessionSummaryCard && (() => {
+          // Recalcula variáveis necessárias
+          const formatSleepTime = (minutes: number) => {
+            if (minutes < 1) {
+              const seconds = Math.round(minutes * 60);
+              return `${seconds} segundo${seconds !== 1 ? 's' : ''}`;
+            }
+            const mins = Math.round(minutes);
+            return `${mins} minuto${mins !== 1 ? 's' : ''}`;
+          };
+
+          const sleepTimeEntries = Object.entries(totalSleepTime).filter(([_, time]) => time > 0);
+          const sortedByTime = sleepTimeEntries.sort((a, b) => b[1] - a[1]);
+          const sleepKing = sortedByTime.length > 0 ? sortedByTime[0] : null;
+          
+          const napEntries = Object.entries(naps).filter(([_, count]) => count > 0);
+          const sortedByNaps = napEntries.sort((a, b) => b[1] - a[1]);
+          const napKing = sortedByNaps.length > 0 ? sortedByNaps[0] : null;
+          
+          const survivors = selectedParticipants.filter(personId => !naps[personId] || naps[personId] === 0);
+
+          // Calcula recordista (quem ficou mais tempo acordado)
+          const awakeTimes = selectedParticipants
+            .filter(id => awakeStartTimes[id])
+            .map(id => {
+              const now = sessionStartTime || new Date();
+              const awakeMs = now.getTime() - awakeStartTimes[id].getTime();
+              return {
+                personId: id,
+                milliseconds: awakeMs
+              };
+            })
+            .sort((a, b) => b.milliseconds - a.milliseconds);
+          
+          const recordHolderData = awakeTimes.length > 0 && awakeTimes[0] ? (() => {
+            const awakeMs = awakeTimes[0].milliseconds;
+            const hours = Math.floor(awakeMs / (1000 * 60 * 60));
+            const minutes = Math.floor((awakeMs % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((awakeMs % (1000 * 60)) / 1000);
+            const awakeTimeStr = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            return {
+              name: getPerson(awakeTimes[0].personId)?.name || '',
+              avatar: getAvatar(getPerson(awakeTimes[0].personId)?.name || ''),
+              awakeTime: awakeTimeStr
+            };
+          })() : undefined;
+
+          // Awards calculation
+          const fastestSleeper = Object.entries(firstSleepDelay)
+            .filter(([_, time]) => time > 0)
+            .sort((a, b) => a[1] - b[1])[0];
+          
+          let longestNap: [string, number] | null = null;
+          Object.entries(individualNapDurations).forEach(([personId, napsList]) => {
+            const maxNap = Math.max(...napsList);
+            if (!longestNap || maxNap > longestNap[1]) {
+              longestNap = [personId, maxNap];
+            }
+          });
+          
+          const mostFlexoes = sortedByNaps[0];
+          const corujaDeOuro = survivors.length > 0 ? survivors[0] : null;
+
+          const sleepKingData = sleepKing ? {
+            name: getPerson(sleepKing[0])?.name || '',
+            avatar: getAvatar(getPerson(sleepKing[0])?.name || ''),
+            time: formatSleepTime(sleepKing[1]),
+            naps: naps[sleepKing[0]] || 0
+          } : undefined;
+
+          const napKingData = napKing && napKing[0] !== sleepKing?.[0] ? {
+            name: getPerson(napKing[0])?.name || '',
+            avatar: getAvatar(getPerson(napKing[0])?.name || ''),
+            naps: napKing[1]
+          } : undefined;
+
+          const survivorsData = survivors.map(personId => ({
+            name: getPerson(personId)?.name || '',
+            avatar: getAvatar(getPerson(personId)?.name || '')
+          }));
+
+          const awardsData: any = {};
+          if (fastestSleeper) {
+            awardsData.fastest = {
+              name: getPerson(fastestSleeper[0])?.name || '',
+              stat: formatSleepTime(fastestSleeper[1])
+            };
+          }
+          if (longestNap) {
+            awardsData.longest = {
+              name: getPerson(longestNap[0])?.name || '',
+              stat: formatSleepTime(longestNap[1])
+            };
+          }
+          if (mostFlexoes) {
+            awardsData.flexoes = {
+              name: getPerson(mostFlexoes[0])?.name || '',
+              stat: `${mostFlexoes[1] * 5} flexões`
+            };
+          }
+          if (corujaDeOuro) {
+            awardsData.coruja = {
+              name: getPerson(corujaDeOuro)?.name || ''
+            };
+          }
+
+          return (
+            <SessionSummaryCard
+              sessionDuration={elapsedTime}
+              totalParticipants={selectedParticipants.length}
+              sleepKing={sleepKingData}
+              napKing={napKingData}
+              recordHolder={recordHolderData}
+              survivors={survivorsData}
+              awards={awardsData}
+              onClose={() => setShowSessionSummaryCard(false)}
+            />
+          );
+        })()}
+      </AnimatePresence>
+
       {/* Achievement Notifications */}
       <AchievementNotification 
         achievement={currentAchievement?.achievement || null}
@@ -1391,6 +1868,7 @@ export const StartSession: React.FC = () => {
         onClose={() => setCurrentAchievement(null)}
       />
     </div>
+    </PageTransition>
   );
 };
 

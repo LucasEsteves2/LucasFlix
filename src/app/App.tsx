@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import { DataProvider } from '../context/DataContext';
 import { AlternativeModeProvider, useAlternativeMode } from '../context/AlternativeModeContext';
 import { Layout } from './Layout';
@@ -35,17 +36,19 @@ const AppContent: React.FC = () => {
 
   return (
     <Layout brandTitle={brandTitle}>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/start-session" element={<StartSession />} />
-            <Route path="/sessions" element={<Sessions />} />
-            <Route path="/shame-wall" element={<ShameWall />} />
-            <Route path="/rankings" element={<Rankings />} />
-            <Route path="/achievements" element={<Achievements />} />
-            <Route path="/daily-movies" element={<DailyMovies />} />
-            <Route path="/statistics" element={<Statistics />} />
-            <Route path="/backup" element={<Backup />} />
-          </Routes>
-        </Layout>
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          <Route path="/" element={<Home />} />
+          <Route path="/start-session" element={<StartSession />} />
+          <Route path="/sessions" element={<Sessions />} />
+          <Route path="/shame-wall" element={<ShameWall />} />
+          <Route path="/rankings" element={<Rankings />} />
+          <Route path="/achievements" element={<Achievements />} />
+          <Route path="/daily-movies" element={<DailyMovies />} />
+          <Route path="/statistics" element={<Statistics />} />
+          <Route path="/backup" element={<Backup />} />
+        </Routes>
+      </AnimatePresence>
+    </Layout>
   );
 };

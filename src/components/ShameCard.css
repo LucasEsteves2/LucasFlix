@@ -1,0 +1,294 @@
+/* Overlay do Modal */
+.shame-card-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.shame-card-modal {
+  max-width: 600px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Card Exportável (o que vira imagem) */
+.shame-card-exportable {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d0a0a 100%);
+  border: 4px solid #e50914;
+  border-radius: 20px;
+  padding: 2rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  box-shadow: 
+    0 0 40px rgba(229, 9, 20, 0.4),
+    inset 0 0 60px rgba(229, 9, 20, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.shame-card-exportable::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(229, 9, 20, 0.05) 10px,
+    rgba(229, 9, 20, 0.05) 20px
+  );
+  animation: stripeMove 20s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes stripeMove {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(50px, 50px); }
+}
+
+/* Header do Card */
+.shame-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.shame-card-logo {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #e50914;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 10px rgba(229, 9, 20, 0.5);
+}
+
+.shame-card-badge {
+  background: linear-gradient(135deg, #e50914, #ff4444);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #fff;
+  text-transform: uppercase;
+  box-shadow: 0 4px 15px rgba(229, 9, 20, 0.4);
+  animation: badgePulse 2s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* Conteúdo do Card */
+.shame-card-content {
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.shame-card-avatar {
+  width: 180px;
+  height: 180px;
+  margin: 0 auto 1.5rem;
+  position: relative;
+}
+
+.shame-card-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 5px solid #e50914;
+  box-shadow: 
+    0 0 30px rgba(229, 9, 20, 0.5),
+    inset 0 0 20px rgba(0, 0, 0, 0.5);
+  filter: grayscale(0.3);
+}
+
+.shame-card-sleep-icon {
+  position: absolute;
+  bottom: -10px;
+  right: -10px;
+  font-size: 3rem;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.8));
+  animation: sleepBounce 1.5s ease-in-out infinite;
+}
+
+@keyframes sleepBounce {
+  0%, 100% { transform: translateY(0) rotate(-10deg); }
+  50% { transform: translateY(-10px) rotate(10deg); }
+}
+
+.shame-card-name {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #fff;
+  margin-bottom: 2rem;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+  letter-spacing: 1px;
+}
+
+/* Estatísticas */
+.shame-card-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.shame-stat-item {
+  background: rgba(0, 0, 0, 0.5);
+  padding: 1rem;
+  border-radius: 12px;
+  border: 2px solid rgba(229, 9, 20, 0.3);
+}
+
+.shame-stat-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.shame-stat-label {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.25rem;
+}
+
+.shame-stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #e50914;
+}
+
+/* Footer do Card */
+.shame-card-footer {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid rgba(229, 9, 20, 0.3);
+}
+
+.shame-card-quote {
+  font-size: 1rem;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 1rem;
+}
+
+.shame-card-watermark {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 1px;
+}
+
+/* Botões de Ação (não aparecem na imagem) */
+.shame-card-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.shame-btn {
+  flex: 1;
+  min-width: 150px;
+  padding: 1rem 1.5rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.shame-btn-share {
+  background: linear-gradient(135deg, #e50914, #ff4444);
+  color: #fff;
+}
+
+.shame-btn-download {
+  background: linear-gradient(135deg, #4a5568, #2d3748);
+  color: #fff;
+}
+
+.shame-btn-close {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.shame-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .shame-card-overlay {
+    padding: 1rem;
+  }
+
+  .shame-card-exportable {
+    padding: 1.5rem;
+  }
+
+  .shame-card-logo {
+    font-size: 1.2rem;
+  }
+
+  .shame-card-badge {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.8rem;
+  }
+
+  .shame-card-avatar {
+    width: 140px;
+    height: 140px;
+  }
+
+  .shame-card-sleep-icon {
+    font-size: 2.5rem;
+  }
+
+  .shame-card-name {
+    font-size: 1.5rem;
+  }
+
+  .shame-card-stats {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .shame-stat-icon {
+    font-size: 1.5rem;
+  }
+
+  .shame-stat-value {
+    font-size: 1.2rem;
+  }
+
+  .shame-card-actions {
+    flex-direction: column;
+  }
+
+  .shame-btn {
+    min-width: 100%;
+  }
+}

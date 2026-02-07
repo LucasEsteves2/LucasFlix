@@ -310,9 +310,9 @@
 }
 
 .witch-modal {
-  max-width: 550px;
+  max-width: 750px;
   width: 100%;
-  max-height: 85vh;
+  max-height: 90vh;
   overflow-y: auto;
   text-align: center;
   background: linear-gradient(135deg, rgba(75, 0, 130, 0.3), rgba(138, 43, 226, 0.3), rgba(75, 0, 130, 0.3)) !important;
@@ -323,7 +323,7 @@
     inset 0 0 30px rgba(138, 43, 226, 0.2) !important;
   position: relative;
   overflow: visible !important;
-  padding: 1.2rem !important;
+  padding: 2rem !important;
 }
 
 /* Vassouras voando */
@@ -345,14 +345,14 @@
 
 /* Ícone de bruxa */
 .witch-icon {
-  font-size: 4rem !important;
+  font-size: 5rem !important;
   filter: drop-shadow(0 0 30px rgba(138, 43, 226, 1));
   margin-bottom: 0.5rem;
 }
 
 /* Título com efeito de tremor */
 .witch-title {
-  font-size: 1.5rem !important;
+  font-size: 1.8rem !important;
   color: #ff69b4 !important;
   text-shadow: 
     0 0 10px rgba(138, 43, 226, 1),
@@ -364,9 +364,9 @@
 }
 
 .witch-message {
-  font-size: 1.05rem !important;
+  font-size: 1.2rem !important;
   color: #fff !important;
-  margin: 0.8rem 0;
+  margin: 1rem 0;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
 }
 
@@ -375,21 +375,21 @@
   background: rgba(0, 0, 0, 0.6);
   border: 2px solid rgba(138, 43, 226, 0.5);
   border-radius: 12px;
-  padding: 1.2rem;
-  margin: 1rem 0;
+  padding: 2.5rem;
+  margin: 2rem 0;
   box-shadow: 
     inset 0 0 20px rgba(138, 43, 226, 0.3),
     0 0 30px rgba(138, 43, 226, 0.2);
 }
 
 .witch-warning-item {
-  font-size: 0.95rem;
+  font-size: 1.6rem;
   color: #ff69b4;
-  margin: 0.6rem 0;
-  padding: 0.6rem 0.9rem;
+  margin: 1rem 0;
+  padding: 1.3rem 1.5rem;
   background: rgba(138, 43, 226, 0.2);
   border-radius: 8px;
-  border-left: 3px solid #8B008B;
+  border-left: 4px solid #8B008B;
   text-align: left;
   font-weight: 600;
   text-shadow: 0 0 10px rgba(138, 43, 226, 0.8);
@@ -404,9 +404,9 @@
 
 /* Aviso final piscante */
 .witch-final-warning {
-  font-size: 1.1rem;
+  font-size: 1.3rem;
   font-weight: 900;
-  margin: 0.8rem 0;
+  margin: 1rem 0;
   text-shadow: 
     0 0 10px currentColor,
     0 0 20px currentColor;
@@ -592,7 +592,7 @@
   display: flex;
   gap: 1rem;
   justify-content: center;
-  margin-top: 1.5rem;
+  margin-top: 0.5rem;
 }
 
 .btn-cancel {
@@ -1102,8 +1102,70 @@
 }
 
 .active-participant.asleep {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: rgba(239, 68, 68, 0.5);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(124, 58, 237, 0.1));
+  border-color: rgba(139, 92, 246, 0.6);
+  box-shadow: 0 0 25px rgba(139, 92, 246, 0.2);
+  position: relative;
+}
+
+/* Cards rosa para alternativas dormindo */
+.active-participant.alternative.asleep {
+  background: linear-gradient(135deg, rgba(255, 20, 147, 0.15), rgba(255, 105, 180, 0.1));
+  border-color: rgba(255, 20, 147, 0.6);
+  box-shadow: 0 0 25px rgba(255, 20, 147, 0.3);
+}
+
+.active-participant.alternative.asleep .sleep-moon {
+  filter: drop-shadow(0 0 15px rgba(255, 20, 147, 0.7));
+}
+
+.active-participant.alternative.asleep .floating-z {
+  color: rgba(255, 20, 147, 0.4);
+  text-shadow: 
+    0 0 10px rgba(255, 20, 147, 0.5),
+    0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+/* Animação de Z's subindo */
+.sleep-moon {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  font-size: 2.5rem;
+  z-index: 1;
+  filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.7));
+  animation: moonFloat 3s ease-in-out infinite;
+}
+
+@keyframes moonFloat {
+  0%, 100% { 
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% { 
+    transform: translateY(-8px) rotate(5deg);
+  }
+}
+
+.sleep-zs-animation {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.floating-z {
+  position: absolute;
+  color: rgba(139, 92, 246, 0.4);
+  font-weight: 900;
+  font-family: 'Arial Black', sans-serif;
+  text-shadow: 
+    0 0 10px rgba(139, 92, 246, 0.5),
+    0 2px 5px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
 }
 
 .active-participant.rescued {
@@ -1145,6 +1207,8 @@
   display: flex;
   align-items: center;
   gap: 2rem;
+  position: relative;
+  z-index: 2;
 }
 
 .participant-avatar-large {
@@ -1172,21 +1236,44 @@
 .sleep-overlay,
 .rescue-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 3rem;
+  pointer-events: none;
+  z-index: 5;
+  background: rgba(0, 0, 0, 0.4);
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2.5rem;
-  backdrop-filter: blur(2px);
+  filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.8));
 }
 
 .active-participant.asleep .participant-avatar-large-img {
-  border-color: #ef4444;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3), 0 6px 20px rgba(239, 68, 68, 0.5);
+  border-color: rgba(139, 92, 246, 0.8);
+  box-shadow: 
+    0 0 0 3px rgba(139, 92, 246, 0.3), 
+    0 6px 20px rgba(139, 92, 246, 0.5),
+    0 0 30px rgba(139, 92, 246, 0.6);
+  animation: sleepGlow 2s ease-in-out infinite;
+}
+
+@keyframes sleepGlow {
+  0%, 100% {
+    box-shadow: 
+      0 0 0 3px rgba(139, 92, 246, 0.3), 
+      0 6px 20px rgba(139, 92, 246, 0.5),
+      0 0 30px rgba(139, 92, 246, 0.6);
+  }
+  50% {
+    box-shadow: 
+      0 0 0 3px rgba(139, 92, 246, 0.5), 
+      0 6px 20px rgba(139, 92, 246, 0.7),
+      0 0 40px rgba(139, 92, 246, 0.8);
+  }
 }
 
 .active-participant.rescued .participant-avatar-large-img {
@@ -1235,7 +1322,26 @@
   font-size: 1.3rem;
   font-weight: 700;
   color: #fff;
-  margin: 0 0 0.5rem 0;
+  margin: 0;
+}
+
+.name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.sleep-message {
+  font-size: 0.85rem;
+  color: rgba(139, 92, 246, 0.95);
+  font-style: italic;
+  font-weight: 500;
+  padding: 0.15rem 0.5rem;
+  background: rgba(139, 92, 246, 0.15);
+  border-radius: 8px;
+  border: 1px solid rgba(139, 92, 246, 0.3);
 }
 
 .badges-row {
@@ -1646,4 +1752,29 @@
   .charts-container {
     grid-template-columns: 1fr;
   }
+}
+
+/* Botão de Shame Card */
+.btn-shame-card {
+  margin-top: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #e50914, #ff4444);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(229, 9, 20, 0.3);
+  width: 100%;
+}
+
+.btn-shame-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(229, 9, 20, 0.5);
+}
+
+.btn-shame-card:active {
+  transform: translateY(0);
 }

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
 import { Toast } from '../components/Toast';
+import { PageTransition } from '../components/PageTransition';
 import './Backup.css';
 
 export const Backup: React.FC = () => {
@@ -60,11 +61,9 @@ export const Backup: React.FC = () => {
       return;
     }
     
-    // Limpa localStorage completamente
-    localStorage.clear();
-    
+    // Limpa dados do Firebase
     clearAllData();
-    setToast({ message: 'Todos os dados foram apagados! Começando do zero...', type: 'info' });
+    setToast({ message: 'Todos os dados foram apagados do Firebase! Começando do zero...', type: 'info' });
     
     // Reload page after 2 seconds
     setTimeout(() => {
@@ -72,11 +71,14 @@ export const Backup: React.FC = () => {
     }, 2000);
   };
 
+
+
   return (
-    <div className="backup-page">
-      <div className="page-header">
-        <h1>💾 Backup</h1>
-      </div>
+    <PageTransition>
+      <div className="backup-page">
+        <div className="page-header">
+          <h1>💾 Backup</h1>
+        </div>
 
       <div className="backup-section">
         <div className="backup-card">
@@ -137,5 +139,6 @@ export const Backup: React.FC = () => {
         />
       )}
     </div>
+    </PageTransition>
   );
 };

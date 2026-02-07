@@ -5,117 +5,63 @@ import { Card } from '../components/Card';
 import { Badge } from '../components/Badge';
 import { Row } from '../components/Row';
 import { Session, DailyMovie } from '../data/models';
+import { PageTransition } from '../components/PageTransition';
+import { AnimatePresence } from 'framer-motion';
+import { ShameCard } from '../components/ShameCard';
+import { SurvivorCard } from '../components/SurvivorCard';
+import { KingCard } from '../components/KingCard';
+import { AwardCard } from '../components/AwardCard';
+import { SessionSummaryCard } from '../components/SessionSummaryCard';
 import './Sessions.css';
 
+// Avatar imports
+import DiegoAvatar from '../imgs/DiegoAvatar.png';
+import LucasAvatar from '../imgs/LucasAvatar.png';
+import MentaAvatar from '../imgs/MentaAvatar.png';
+import ThiagoAvatar from '../imgs/ThiagoAvatar.png';
+import JuliaAvatar from '../imgs/JuliaAvatar.png';
+import ValescaAvatar from '../imgs/ValescaAvatar.png';
+import VitoriaAvatar from '../imgs/VitoriaAvatar.png';
+import LucaVitoriaAvatar from '../imgs/lucaVitoriaAvatar.png';
+
+const getAvatar = (name: string) => {
+  const firstName = name.split(' ')[0].toLowerCase();
+  const avatars: Record<string, string> = {
+    'diego': DiegoAvatar,
+    'lucas': LucasAvatar,
+    'menta': MentaAvatar,
+    'thiago': ThiagoAvatar,
+    'julia': JuliaAvatar,
+    'valesca': ValescaAvatar,
+    'vitória': VitoriaAvatar,
+    'lucca': LucaVitoriaAvatar,
+  };
+  return avatars[firstName] || LucasAvatar;
+};
+
 export const Sessions: React.FC = () => {
-  const { sessions, addSession, updateSession, deleteSession, people, getPerson, dailyMovies, addDailyMovie, deleteDailyMovie, votes, addVote } = useData();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingSession, setEditingSession] = useState<Session | null>(null);
-  const [selectedPerson, setSelectedPerson] = useState<string>('all');
+  const { sessions, people, getPerson, dailyMovies, addDailyMovie, addDailyMovies, deleteDailyMovie, getTodayMovies, clearTodayMovies, votes, addVote } = useData();
+  const [selectedSession, setSelectedSession] = useState<Session | null>(null);
+  
+  // Card states
+  const [showShameCard, setShowShameCard] = useState<string | null>(null);
+  const [showSurvivorCard, setShowSurvivorCard] = useState(false);
+  const [showKingCard, setShowKingCard] = useState<{type: 'sleep'|'nap'; personId: string} | null>(null);
+  const [showAwardCard, setShowAwardCard] = useState<{type: 'fastest'|'longest'|'flexoes'|'coruja'; personId: string; stat: string} | null>(null);
+  const [showSessionSummaryCard, setShowSessionSummaryCard] = useState(false);
   
   // Daily Movies states
   const [isMovieModalOpen, setIsMovieModalOpen] = useState(false);
+  const [isBulkMode, setIsBulkMode] = useState(false);
+  const [bulkMovieList, setBulkMovieList] = useState('');
   const [voteModalOpen, setVoteModalOpen] = useState(false);
   const [selectedMovie, setSelectedMovie] = useState<DailyMovie | null>(null);
 
-  const [formData, setFormData] = useState({
-    dateISO: '',
-    movieTitle: '',
-    chosenByPersonId: '',
-    participantIds: [] as string[],
-    firstSleeperPersonId: '',
-    sleepTimes: [] as { personId: string; time: string }[],
-    footMoment: {
-      hadFoot: false,
-      playerPersonId: '',
-      result: 'GANHOU' as 'GANHOU' | 'PERDEU' | 'EMPATE',
-      durationMin: 0,
-      note: '',
-    },
-    notes: '',
-  });
-  
   const [movieFormData, setMovieFormData] = useState({
     title: '',
     dateISO: '',
     createdByPersonId: '',
   });
-
-  const openModal = (session?: Session) => {
-    if (session) {
-      setEditingSession(session);
-      setFormData({
-        dateISO: session.dateISO,
-        movieTitle: session.movieTitle,
-        chosenByPersonId: session.chosenByPersonId,
-        participantIds: session.participantIds,
-        firstSleeperPersonId: session.firstSleeperPersonId || '',
-        sleepTimes: session.sleepTimes || [],
-        footMoment: session.footMoment || {
-          hadFoot: false,
-          playerPersonId: '',
-          result: 'GANHOU',
-          durationMin: 0,
-          note: '',
-        },
-        notes: session.notes || '',
-      });
-    } else {
-      setEditingSession(null);
-      setFormData({
-        dateISO: new Date().toISOString().split('T')[0],
-        movieTitle: '',
-        chosenByPersonId: people[0]?.id || '',
-        participantIds: people.map(p => p.id),
-        firstSleeperPersonId: '',
-        sleepTimes: [],
-        footMoment: {
-          hadFoot: false,
-          playerPersonId: '',
-          result: 'GANHOU',
-          durationMin: 0,
-          note: '',
-        },
-        notes: '',
-      });
-    }
-    setIsModalOpen(true);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const sessionData = {
-      ...formData,
-      footMoment: formData.footMoment.hadFoot ? formData.footMoment : undefined,
-      firstSleeperPersonId: formData.firstSleeperPersonId || undefined,
-      sleepTimes: formData.sleepTimes.length > 0 ? formData.sleepTimes : undefined,
-      notes: formData.notes || undefined,
-    };
-
-    if (editingSession) {
-      updateSession(editingSession.id, sessionData);
-    } else {
-      addSession(sessionData);
-    }
-    
-    setIsModalOpen(false);
-  };
-
-  const handleDelete = (id: string) => {
-    if (confirm('Tem certeza que deseja excluir esta sessão?')) {
-      deleteSession(id);
-    }
-  };
-
-  const toggleParticipant = (personId: string) => {
-    setFormData(prev => ({
-      ...prev,
-      participantIds: prev.participantIds.includes(personId)
-        ? prev.participantIds.filter(id => id !== personId)
-        : [...prev.participantIds, personId]
-    }));
-  };
   
   // Daily Movies functions
   const openMovieModal = () => {
@@ -124,21 +70,60 @@ export const Sessions: React.FC = () => {
       dateISO: new Date().toISOString().split('T')[0],
       createdByPersonId: people[0]?.id || '',
     });
+    setBulkMovieList('');
+    setIsBulkMode(false);
     setIsMovieModalOpen(true);
   };
 
   const handleMovieSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    addDailyMovie({
-      ...movieFormData,
-      createdAtISO: new Date().toISOString(),
-    });
+    
+    if (isBulkMode) {
+      // Bulk add mode
+      if (!bulkMovieList.trim()) {
+        alert('Digite pelo menos um filme!');
+        return;
+      }
+      
+      const movies = bulkMovieList
+        .split('\n')
+        .map(m => m.trim())
+        .filter(m => m.length > 0);
+      
+      if (movies.length === 0) {
+        alert('Nenhum filme válido encontrado!');
+        return;
+      }
+      
+      addDailyMovies(movieFormData.dateISO, movies);
+    } else {
+      // Single add mode
+      addDailyMovie({
+        ...movieFormData,
+        createdAtISO: new Date().toISOString(),
+      });
+    }
+    
     setIsMovieModalOpen(false);
   };
 
   const handleMovieDelete = (id: string) => {
     if (confirm('Tem certeza que deseja excluir este filme?')) {
       deleteDailyMovie(id);
+    }
+  };
+
+  const handleClearTodayMovies = () => {
+    const todayMovies = getTodayMovies();
+    
+    if (todayMovies.length === 0) {
+      alert('Não há filmes para hoje!');
+      return;
+    }
+
+    if (confirm(`Tem certeza que deseja limpar os ${todayMovies.length} filmes de hoje?`)) {
+      clearTodayMovies();
+      alert('Filmes de hoje limpos com sucesso!');
     }
   };
 
@@ -171,54 +156,34 @@ export const Sessions: React.FC = () => {
   };
 
   const rankedMovies = [...dailyMovies]
-    .map(movie => ({
-      ...movie,
-      average: parseFloat(getMovieAverage(movie.id)),
-      voteCount: getMovieVotes(movie.id).length,
-    }))
+    .map(movie => {
+      const avg = getMovieAverage(movie.id);
+      return {
+        ...movie,
+        average: typeof avg === 'string' ? parseFloat(avg) : avg,
+        voteCount: getMovieVotes(movie.id).length,
+      };
+    })
     .sort((a, b) => {
       if (b.average !== a.average) return b.average - a.average;
       return b.voteCount - a.voteCount;
     });
 
-  const addSleepTime = () => {
-    setFormData(prev => ({
-      ...prev,
-      sleepTimes: [...prev.sleepTimes, { personId: people[0]?.id || '', time: '' }]
-    }));
-  };
-
-  const updateSleepTime = (index: number, field: 'personId' | 'time', value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      sleepTimes: prev.sleepTimes.map((st, i) => 
-        i === index ? { ...st, [field]: value } : st
-      )
-    }));
-  };
-
-  const removeSleepTime = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      sleepTimes: prev.sleepTimes.filter((_, i) => i !== index)
-    }));
-  };
-
-  const filteredSessions = selectedPerson === 'all' 
-    ? sessions 
-    : sessions.filter(s => s.participantIds.includes(selectedPerson));
-
-  const sortedSessions = [...filteredSessions].sort((a, b) => b.dateISO.localeCompare(a.dateISO));
-
   return (
-    <div className="sessions-page">
-      {/* Daily Movies Section */}
-      <div className="page-header">
-        <h1>🍿 Filmes do Dia</h1>
-        <button className="btn-primary" onClick={openMovieModal}>
-          + Novo Filme
-        </button>
-      </div>
+    <PageTransition>
+      <div className="sessions-page">
+        {/* Daily Movies Section */}
+        <div className="page-header">
+          <h1>🍿 Filmes do Dia</h1>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <button className="btn-primary" onClick={openMovieModal}>
+              + Novo Filme
+            </button>
+            <button className="btn-danger" onClick={handleClearTodayMovies}>
+              🗑️ Limpar Filmes de Hoje
+            </button>
+          </div>
+        </div>
 
       <Row title="Rei dos Filmes (Melhores Avaliados)">
         {rankedMovies.slice(0, 10).map((movie, index) => (
@@ -247,253 +212,262 @@ export const Sessions: React.FC = () => {
 
       {/* Sessions Section */}
       <div className="page-header">
-        <h1>🎬 Sessões</h1>
-        <button className="btn-primary" onClick={() => openModal()}>
-          + Nova Sessão
-        </button>
+        <h1>📅 Sessões Anteriores</h1>
       </div>
 
-      <div className="filters">
-        <label>
-          Filtrar por pessoa:
-          <select value={selectedPerson} onChange={(e) => setSelectedPerson(e.target.value)}>
-            <option value="all">Todos</option>
-            {people.map(person => (
-              <option key={person.id} value={person.id}>{person.name}</option>
-            ))}
-          </select>
-        </label>
-      </div>
-
-      <Row title={`${sortedSessions.length} Sessões`}>
-        {sortedSessions.map(session => (
-          <Card key={session.id}>
-            <h3>{session.movieTitle}</h3>
-            <p>📅 {new Date(session.dateISO).toLocaleDateString('pt-BR')}</p>
-            <p>👤 Escolhido por: {getPerson(session.chosenByPersonId)?.name}</p>
-            <p>👥 Participantes: {session.participantIds.length}</p>
+      <Row title={`${sessions.length} Sessões Realizadas`}>
+        {sessions
+          .sort((a, b) => b.dateISO.localeCompare(a.dateISO))
+          .map(session => {
+            const sessionMovies = session.movies || [];
+            const participants = session.participantIds || [];
+            const survivors = participants.filter(id => 
+              !session.sleepTimes?.some(st => st.personId === id)
+            );
             
-            <div style={{ marginTop: '0.5rem' }}>
-              {session.footMoment && (
-                <Badge 
-                  text={`PÉS: ${session.footMoment.result}`} 
-                  variant={session.footMoment.result === 'GANHOU' ? 'success' : session.footMoment.result === 'PERDEU' ? 'danger' : 'warning'} 
-                />
-              )}
-              {!session.firstSleeperPersonId && <Badge text="VIRAMOS!" variant="success" />}
-              {session.firstSleeperPersonId && (
-                <Badge text={`Dormiu: ${getPerson(session.firstSleeperPersonId)?.name}`} variant="danger" />
-              )}
-            </div>
-            
-            <div className="card-actions">
-              <button className="btn-secondary" onClick={() => openModal(session)}>Editar</button>
-              <button className="btn-danger" onClick={() => handleDelete(session.id)}>Excluir</button>
-            </div>
-          </Card>
-        ))}
+            return (
+              <Card key={session.id} hover onClick={() => setSelectedSession(session)}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                  <h2 style={{ fontSize: '1.8rem', margin: 0 }}>
+                    {new Date(session.dateISO).toLocaleDateString('pt-BR', { 
+                      day: '2-digit', 
+                      month: '2-digit', 
+                      year: 'numeric' 
+                    })}
+                  </h2>
+                  <Badge 
+                    text={`${participants.length} pessoas`} 
+                    variant="info" 
+                  />
+                </div>
+                
+                <div style={{ marginBottom: '0.75rem' }}>
+                  {sessionMovies.length > 0 && (
+                    <p style={{ color: '#b3b3b3', margin: '0.5rem 0' }}>
+                      🎬 {sessionMovies.length} filme{sessionMovies.length > 1 ? 's' : ''}
+                    </p>
+                  )}
+                  {survivors.length === participants.length ? (
+                    <Badge text="🏆 VIRAMOS A NOITE!" variant="success" />
+                  ) : (
+                    <p style={{ color: '#b3b3b3', margin: '0.5rem 0' }}>
+                      😴 {participants.length - survivors.length} dormiram
+                    </p>
+                  )}
+                </div>
+                
+                <p style={{ color: '#666', fontSize: '0.9rem', margin: 0 }}>
+                  Clique para ver detalhes
+                </p>
+              </Card>
+            );
+          })}
       </Row>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingSession ? 'Editar Sessão' : 'Nova Sessão'}>
-        <form onSubmit={handleSubmit} className="session-form">
-          <div className="form-group">
-            <label>Data</label>
-            <input 
-              type="date" 
-              value={formData.dateISO} 
-              onChange={(e) => setFormData({ ...formData, dateISO: e.target.value })}
-              required 
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Filme</label>
-            <input 
-              type="text" 
-              value={formData.movieTitle} 
-              onChange={(e) => setFormData({ ...formData, movieTitle: e.target.value })}
-              required 
-              placeholder="Nome do filme"
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Escolhido por</label>
-            <select 
-              value={formData.chosenByPersonId} 
-              onChange={(e) => setFormData({ ...formData, chosenByPersonId: e.target.value })}
-              required
-            >
-              {people.map(person => (
-                <option key={person.id} value={person.id}>{person.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label>Participantes</label>
-            <div className="checkbox-group">
-              {people.map(person => (
-                <label key={person.id} className="checkbox-label">
-                  <input 
-                    type="checkbox" 
-                    checked={formData.participantIds.includes(person.id)}
-                    onChange={() => toggleParticipant(person.id)}
-                  />
-                  {person.name}
-                </label>
-              ))}
+      {/* Session Summary Modal */}
+      {selectedSession && (() => {
+        // Get movies for this session date
+        const sessionMovies = dailyMovies.filter(m => m.dateISO === selectedSession.dateISO);
+        
+        return (
+          <Modal 
+            isOpen={!!selectedSession} 
+            onClose={() => setSelectedSession(null)} 
+            title={`Sessão - ${new Date(selectedSession.dateISO).toLocaleDateString('pt-BR')}`}
+          >
+            <div className="session-summary-modal">
+              <div className="summary-section">
+                <h3>🎬 Filmes Assistidos</h3>
+                {sessionMovies.length > 0 ? (
+                  <ul>
+                    {sessionMovies.map((movie, idx) => (
+                      <li key={idx}>{movie.title}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p style={{ color: '#666' }}>Nenhum filme registrado para esta data</p>
+                )}
             </div>
-          </div>
 
-          <div className="form-group">
-            <label>Primeiro a dormir</label>
-            <select 
-              value={formData.firstSleeperPersonId} 
-              onChange={(e) => setFormData({ ...formData, firstSleeperPersonId: e.target.value })}
-            >
-              <option value="">Ninguém (viramos!)</option>
-              {formData.participantIds.map(id => {
-                const person = getPerson(id);
-                return person ? <option key={id} value={id}>{person.name}</option> : null;
-              })}
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label>Horários de Sono</label>
-            {formData.sleepTimes.map((st, index) => (
-              <div key={index} className="sleep-time-row">
-                <select 
-                  value={st.personId}
-                  onChange={(e) => updateSleepTime(index, 'personId', e.target.value)}
-                >
-                  {formData.participantIds.map(id => {
-                    const person = getPerson(id);
-                    return person ? <option key={id} value={id}>{person.name}</option> : null;
-                  })}
-                </select>
-                <input 
-                  type="time" 
-                  value={st.time}
-                  onChange={(e) => updateSleepTime(index, 'time', e.target.value)}
-                />
-                <button type="button" onClick={() => removeSleepTime(index)} className="btn-danger-small">×</button>
-              </div>
-            ))}
-            <button type="button" onClick={addSleepTime} className="btn-secondary">+ Adicionar Horário</button>
-          </div>
-
-          <div className="form-group">
-            <label className="checkbox-label">
-              <input 
-                type="checkbox" 
-                checked={formData.footMoment.hadFoot}
-                onChange={(e) => setFormData({ 
-                  ...formData, 
-                  footMoment: { ...formData.footMoment, hadFoot: e.target.checked }
+            <div className="summary-section">
+              <h3>👥 Participantes ({selectedSession.participantIds?.length || 0})</h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                {selectedSession.participantIds?.map(id => {
+                  const person = getPerson(id);
+                  return person ? (
+                    <Badge key={id} text={person.name} variant="info" />
+                  ) : null;
                 })}
-              />
-              Teve Momento Pés?
-            </label>
-          </div>
-
-          {formData.footMoment.hadFoot && (
-            <>
-              <div className="form-group">
-                <label>Jogador</label>
-                <select 
-                  value={formData.footMoment.playerPersonId} 
-                  onChange={(e) => setFormData({ 
-                    ...formData, 
-                    footMoment: { ...formData.footMoment, playerPersonId: e.target.value }
-                  })}
-                  required
-                >
-                  <option value="">Selecione...</option>
-                  {formData.participantIds.map(id => {
-                    const person = getPerson(id);
-                    return person ? <option key={id} value={id}>{person.name}</option> : null;
-                  })}
-                </select>
               </div>
+            </div>
 
-              <div className="form-group">
-                <label>Resultado</label>
-                <select 
-                  value={formData.footMoment.result} 
-                  onChange={(e) => setFormData({ 
-                    ...formData, 
-                    footMoment: { ...formData.footMoment, result: e.target.value as any }
-                  })}
-                >
-                  <option value="GANHOU">Ganhou</option>
-                  <option value="PERDEU">Perdeu</option>
-                  <option value="EMPATE">Empate</option>
-                </select>
+            {selectedSession.sleepTimes && selectedSession.sleepTimes.length > 0 && (
+              <div className="summary-section">
+                <h3>😴 Dorminhocos</h3>
+                {selectedSession.sleepTimes.map((st, idx) => {
+                  const person = getPerson(st.personId);
+                  return person ? (
+                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', borderRadius: '6px', marginBottom: '0.5rem' }}>
+                      <span style={{ fontWeight: 600 }}>{person.name}</span>
+                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <Badge text={st.time} variant="danger" />
+                        <button 
+                          className="btn-secondary"
+                          style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
+                          onClick={() => setShowShameCard(st.personId)}
+                        >
+                          🃏 Card
+                        </button>
+                      </div>
+                    </div>
+                  ) : null;
+                })}
               </div>
+            )}
 
-              <div className="form-group">
-                <label>Duração (minutos)</label>
-                <input 
-                  type="number" 
-                  value={formData.footMoment.durationMin || ''} 
-                  onChange={(e) => setFormData({ 
-                    ...formData, 
-                    footMoment: { ...formData.footMoment, durationMin: parseInt(e.target.value) || 0 }
-                  })}
-                />
+            {selectedSession.participantIds && (() => {
+              const survivors = selectedSession.participantIds.filter(id => 
+                !selectedSession.sleepTimes?.some(st => st.personId === id)
+              );
+              const sleepers = selectedSession.sleepTimes || [];
+              const sleepKing = sleepers.length > 0 ? sleepers[0].personId : null;
+              
+              return survivors.length > 0 && (
+                <>
+                  {sleepKing && (
+                    <div className="summary-section">
+                      <h3>👑 Rei do Sono</h3>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', background: 'rgba(255, 215, 0, 0.1)', borderRadius: '6px', border: '1px solid rgba(255, 215, 0, 0.3)' }}>
+                        <span style={{ fontSize: '1.2rem', fontWeight: 600 }}>{getPerson(sleepKing)?.name}</span>
+                        <button 
+                          className="btn-primary"
+                          onClick={() => setShowKingCard({ type: 'sleep', personId: sleepKing })}
+                        >
+                          🃏 Gerar Card do Rei
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="summary-section">
+                    <h3>🏆 Sobreviventes ({survivors.length})</h3>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
+                      {survivors.map(id => {
+                        const person = getPerson(id);
+                        return person ? (
+                          <Badge key={id} text={person.name} variant="success" />
+                        ) : null;
+                      })}
+                    </div>
+                    <button 
+                      className="btn-primary"
+                      style={{ width: '100%' }}
+                      onClick={() => setShowSurvivorCard(true)}
+                    >
+                      🃏 Gerar Card dos Sobreviventes
+                    </button>
+                  </div>
+                </>
+              );
+            })()}
+
+            {selectedSession.warmUp && (
+              <div className="summary-section">
+                <h3>🦶 Momento Pés</h3>
+                <p>Jogador: {getPerson(selectedSession.warmUp.playerPersonId)?.name}</p>
+                <p>
+                  Resultado: <Badge 
+                    text={selectedSession.warmUp.result} 
+                    variant={selectedSession.warmUp.result === 'GANHOU' ? 'success' : selectedSession.warmUp.result === 'PERDEU' ? 'danger' : 'warning'} 
+                  />
+                </p>
+                {selectedSession.warmUp.durationMin && (
+                  <p>Duração: {selectedSession.warmUp.durationMin} min</p>
+                )}
               </div>
+            )}
 
-              <div className="form-group">
-                <label>Observação (Pés)</label>
-                <input 
-                  type="text" 
-                  value={formData.footMoment.note || ''} 
-                  onChange={(e) => setFormData({ 
-                    ...formData, 
-                    footMoment: { ...formData.footMoment, note: e.target.value }
-                  })}
-                  placeholder="Ex: Vitória épica!"
-                />
+            {selectedSession.notes && (
+              <div className="summary-section">
+                <h3>📝 Observações</h3>
+                <p style={{ color: '#b3b3b3' }}>{selectedSession.notes}</p>
               </div>
-            </>
-          )}
+            )}
 
-          <div className="form-group">
-            <label>Observações Gerais</label>
-            <textarea 
-              value={formData.notes} 
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              rows={3}
-              placeholder="Comentários sobre a sessão..."
-            />
-          </div>
+            {/* Master Summary Card Button */}
+            <div className="summary-section" style={{ borderBottom: 'none', paddingTop: '2rem' }}>
+              <button 
+                className="btn-primary"
+                style={{ width: '100%', padding: '1rem', fontSize: '1.1rem', background: 'linear-gradient(135deg, #e50914 0%, #b20710 100%)', fontWeight: 600 }}
+                onClick={() => setShowSessionSummaryCard(true)}
+              >
+                🎬 Gerar Resumo Completo da Sessão
+              </button>
+            </div>
 
-          <div className="form-actions">
-            <button type="button" onClick={() => setIsModalOpen(false)} className="btn-secondary">
-              Cancelar
+            <button 
+              className="btn-secondary" 
+              style={{ width: '100%', marginTop: '1rem' }}
+              onClick={() => setSelectedSession(null)}
+            >
+              Fechar
             </button>
-            <button type="submit" className="btn-primary">
-              {editingSession ? 'Atualizar' : 'Criar'}
-            </button>
           </div>
-        </form>
-      </Modal>
+        </Modal>
+        );
+      })()}
 
       {/* Daily Movie Modal */}
       <Modal isOpen={isMovieModalOpen} onClose={() => setIsMovieModalOpen(false)} title="Novo Filme do Dia">
         <form onSubmit={handleMovieSubmit} className="movie-form">
+          {/* Toggle between single and bulk mode */}
           <div className="form-group">
-            <label>Título do Filme</label>
-            <input 
-              type="text" 
-              value={movieFormData.title} 
-              onChange={(e) => setMovieFormData({ ...movieFormData, title: e.target.value })}
-              required 
-              placeholder="Ex: John Wick 4"
-            />
+            <label className="bulk-mode-toggle">
+              <input 
+                type="checkbox" 
+                checked={isBulkMode}
+                onChange={(e) => setIsBulkMode(e.target.checked)}
+              />
+              <span>Adicionar múltiplos filmes (um por linha)</span>
+            </label>
           </div>
+
+          {!isBulkMode ? (
+            // Single movie mode
+            <div className="form-group">
+              <label>Título do Filme</label>
+              <input 
+                type="text" 
+                value={movieFormData.title} 
+                onChange={(e) => setMovieFormData({ ...movieFormData, title: e.target.value })}
+                required 
+                placeholder="Ex: John Wick 4"
+              />
+            </div>
+          ) : (
+            // Bulk mode
+            <div className="form-group">
+              <label>Lista de Filmes (um por linha)</label>
+              <textarea 
+                value={bulkMovieList}
+                onChange={(e) => setBulkMovieList(e.target.value)}
+                placeholder="Não Fale o Mal&#10;Erin Brockovich&#10;A Cor que Caiu do Espaço&#10;Arcadian Invasão Sombria&#10;Pisque Duas Vezes"
+                rows={8}
+                required
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  background: '#0a0a0a',
+                  color: '#fff',
+                  border: '1px solid #444',
+                  borderRadius: '4px',
+                  fontFamily: 'inherit',
+                  fontSize: '0.95rem',
+                  resize: 'vertical'
+                }}
+              />
+            </div>
+          )}
 
           <div className="form-group">
             <label>Data</label>
@@ -505,29 +479,190 @@ export const Sessions: React.FC = () => {
             />
           </div>
 
-          <div className="form-group">
-            <label>Cadastrado por</label>
-            <select 
-              value={movieFormData.createdByPersonId} 
-              onChange={(e) => setMovieFormData({ ...movieFormData, createdByPersonId: e.target.value })}
-              required
-            >
-              {people.map(person => (
-                <option key={person.id} value={person.id}>{person.name}</option>
-              ))}
-            </select>
-          </div>
+          {!isBulkMode && (
+            <div className="form-group">
+              <label>Cadastrado por</label>
+              <select 
+                value={movieFormData.createdByPersonId} 
+                onChange={(e) => setMovieFormData({ ...movieFormData, createdByPersonId: e.target.value })}
+                required
+              >
+                {people.map(person => (
+                  <option key={person.id} value={person.id}>{person.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div className="form-actions">
             <button type="button" onClick={() => setIsMovieModalOpen(false)} className="btn-secondary">
               Cancelar
             </button>
             <button type="submit" className="btn-primary">
-              Criar
+              {isBulkMode ? 'Adicionar Filmes' : 'Criar'}
             </button>
           </div>
         </form>
       </Modal>
+
+      {/* Card Modals */}
+      <AnimatePresence>
+        {showShameCard && selectedSession && (() => {
+          const person = getPerson(showShameCard);
+          const sleepTime = selectedSession.sleepTimes?.find(st => st.personId === showShameCard);
+          const totalSleepTime = selectedSession.totalSleepTime?.[showShameCard] || 0;
+          const napCount = selectedSession.naps?.[showShameCard] || 0;
+          return person && sleepTime && (
+            <ShameCard
+              key="shame-card"
+              personName={person.name}
+              personAvatar={getAvatar(person.name)}
+              totalSleepTime={totalSleepTime}
+              napCount={napCount}
+              sleepTime={sleepTime.time}
+              onClose={() => setShowShameCard(null)}
+            />
+          );
+        })()}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showSurvivorCard && selectedSession && (() => {
+          const participants = selectedSession.participantIds || [];
+          const sleepers = selectedSession.sleepTimes || [];
+          const survivors = participants
+            .filter(id => !sleepers.some(st => st.personId === id))
+            .map(id => {
+              const p = getPerson(id);
+              return p ? { name: p.name, avatar: getAvatar(p.name) } : null;
+            })
+            .filter(p => p !== null) as { name: string; avatar: string }[];
+          
+          const sessionStart = '20:00';
+          const lastSleepTime = sleepers.length > 0 ? sleepers[sleepers.length - 1].time : '06:00';
+          const calculateDuration = (start: string, end: string) => {
+            const [startH, startM] = start.split(':').map(Number);
+            const [endH, endM] = end.split(':').map(Number);
+            let hours = endH - startH;
+            let minutes = endM - startM;
+            if (hours < 0) hours += 24;
+            if (minutes < 0) { hours--; minutes += 60; }
+            return `${hours}h ${minutes}min`;
+          };
+          
+          return (
+            <SurvivorCard
+              key="survivor-card"
+              sessionDuration={calculateDuration(sessionStart, lastSleepTime)}
+              survivors={survivors}
+              onClose={() => setShowSurvivorCard(false)}
+            />
+          );
+        })()}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showKingCard && selectedSession && (() => {
+          const person = getPerson(showKingCard.personId);
+          const sleepTime = selectedSession.sleepTimes?.find(st => st.personId === showKingCard.personId);
+          const totalSleepTime = selectedSession.totalSleepTime?.[showKingCard.personId] || 0;
+          const napCount = selectedSession.naps?.[showKingCard.personId] || 0;
+          return person && sleepTime && (
+            <KingCard
+              key="king-card"
+              kingName={person.name}
+              kingAvatar={getAvatar(person.name)}
+              kingType={showKingCard.type}
+              totalSleepTime={totalSleepTime}
+              napCount={napCount}
+              onClose={() => setShowKingCard(null)}
+            />
+          );
+        })()}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showAwardCard && selectedSession && (() => {
+          const person = getPerson(showAwardCard.personId);
+          return person && (
+            <AwardCard
+              key="award-card"
+              awardType={showAwardCard.type}
+              winnerName={person.name}
+              winnerAvatar={getAvatar(person.name)}
+              statValue={showAwardCard.stat}
+              onClose={() => setShowAwardCard(null)}
+            />
+          );
+        })()}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showSessionSummaryCard && selectedSession && (() => {
+          const participants = selectedSession.participantIds || [];
+          const sleepers = selectedSession.sleepTimes || [];
+          const survivors = participants
+            .filter(id => !sleepers.some(st => st.personId === id))
+            .map(id => {
+              const p = getPerson(id);
+              return p ? { name: p.name, avatar: getAvatar(p.name) } : null;
+            })
+            .filter(p => p !== null) as { name: string; avatar: string }[];
+          
+          const lastSleepTime = sleepers.length > 0 ? sleepers[sleepers.length - 1].time : '23:59';
+          const calculateDuration = (end: string) => {
+            const sessionStart = '20:00';
+            const [startH, startM] = sessionStart.split(':').map(Number);
+            const [endH, endM] = end.split(':').map(Number);
+            let hours = endH - startH;
+            let minutes = endM - startM;
+            if (hours < 0) hours += 24;
+            if (minutes < 0) { hours--; minutes += 60; }
+            return `${hours}h ${minutes}min`;
+          };
+          
+          const sleepKingData = sleepers.length > 0 ? (() => {
+            const kingId = sleepers[0].personId;
+            const king = getPerson(kingId);
+            if (!king) return undefined;
+            return {
+              name: king.name,
+              avatar: getAvatar(king.name),
+              time: sleepers[0].time,
+              naps: selectedSession.naps?.[kingId] || 0
+            };
+          })() : undefined;
+          
+          const napTimes = sleepers.map(st => {
+            const [h, m] = st.time.split(':').map(Number);
+            return { id: st.personId, minutes: h * 60 + m };
+          }).filter(t => t.minutes < 12 * 60);
+          const napKingData = napTimes.length > 0 ? (() => {
+            const napKingId = napTimes.sort((a, b) => a.minutes - b.minutes)[0].id;
+            const napKing = getPerson(napKingId);
+            if (!napKing) return undefined;
+            return {
+              name: napKing.name,
+              avatar: getAvatar(napKing.name),
+              naps: selectedSession.naps?.[napKingId] || 0
+            };
+          })() : undefined;
+          
+          return (
+            <SessionSummaryCard
+              key="session-summary-card"
+              sessionDuration={calculateDuration(lastSleepTime)}
+              totalParticipants={participants.length}
+              sleepKing={sleepKingData}
+              napKing={napKingData}
+              recordHolder={undefined}
+              survivors={survivors}
+              awards={{}}
+              onClose={() => setShowSessionSummaryCard(false)}
+            />
+          );
+        })()}
+      </AnimatePresence>
 
       {/* Vote Modal */}
       <Modal isOpen={voteModalOpen} onClose={() => setVoteModalOpen(false)} title={`Votar: ${selectedMovie?.title}`}>
@@ -557,5 +692,6 @@ export const Sessions: React.FC = () => {
         </div>
       </Modal>
     </div>
+    </PageTransition>
   );
 };

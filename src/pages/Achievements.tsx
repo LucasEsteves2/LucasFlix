@@ -4,6 +4,8 @@ import { useData } from '../context/DataContext';
 import { useAchievements } from '../hooks/useAchievements';
 import { ACHIEVEMENTS, RARITY_COLORS, RARITY_GLOW } from '../data/achievements';
 import { Card } from '../components/Card';
+import { PageTransition } from '../components/PageTransition';
+import { ConfettiExplosion } from '../components/AnimationEffects';
 import './Achievements.css';
 
 // Avatar imports
@@ -32,6 +34,7 @@ export const Achievements: React.FC = () => {
   const [selectedPersonId, setSelectedPersonId] = useState<string>(
     people.filter(p => !p.isAlternative)[0]?.id || ''
   );
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const selectedPerson = people.find(p => p.id === selectedPersonId);
   const achievementsWithStatus = getAllAchievementsWithStatus(selectedPersonId);
@@ -77,24 +80,26 @@ export const Achievements: React.FC = () => {
   };
 
   return (
-    <div className="achievements-page">
-      <motion.div 
-        className="page-header"
-        initial={{ y: -50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-      >
-        <h1>🏆 Conquistas</h1>
-        <p>Desbloqueie conquistas e mostre sua dedicação!</p>
-        
-        <div className="view-toggle">
-          <button 
-            className={`toggle-btn ${viewMode === 'global' ? 'active' : ''}`}
-            onClick={() => setViewMode('global')}
-          >
-            🌎 Global
-          </button>
-          <button 
-            className={`toggle-btn ${viewMode === 'individual' ? 'active' : ''}`}
+    <PageTransition>
+      <div className="achievements-page">
+        <ConfettiExplosion trigger={showConfetti} />
+        <motion.div 
+          className="page-header"
+          initial={{ y: -50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+        >
+          <h1>🏆 Conquistas</h1>
+          <p>Desbloqueie conquistas e mostre sua dedicação!</p>
+          
+          <div className="view-toggle">
+            <button 
+              className={`toggle-btn ${viewMode === 'global' ? 'active' : ''}`}
+              onClick={() => setViewMode('global')}
+            >
+              🌎 Global
+            </button>
+            <button 
+              className={`toggle-btn ${viewMode === 'individual' ? 'active' : ''}`}
             onClick={() => setViewMode('individual')}
           >
             👤 Individual
@@ -281,5 +286,6 @@ export const Achievements: React.FC = () => {
         );
       })}
     </div>
+    </PageTransition>
   );
 };

@@ -4,6 +4,7 @@ import { useData } from '../context/DataContext';
 import { Card } from '../components/Card';
 import { Row } from '../components/Row';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { PageTransition } from '../components/PageTransition';
 import './Rankings.css';
 
 // Avatar imports
@@ -37,25 +38,9 @@ export const Rankings: React.FC = () => {
   const [people, setPeople] = useState(contextPeople);
   const [activeTab, setActiveTab] = useState<'awake' | 'warmup'>('awake');
   
-  // Recarrega dados frescos do localStorage quando componente monta
+  // Atualiza quando contexto muda (dados vem do Firebase)
   useEffect(() => {
-    const freshData = JSON.parse(localStorage.getItem('lucasflix_data') || '{}');
-    if (freshData.people) setPeople(freshData.people);
-  }, []);
-  
-  // ESCUTA evento global de atualização de dados
-  useEffect(() => {
-    const handleDataUpdate = () => {
-      const freshData = JSON.parse(localStorage.getItem('lucasflix_data') || '{}');
-      if (freshData.people) setPeople(freshData.people);
-    };
-    
-    window.addEventListener('lucasflix-data-updated', handleDataUpdate);
-    return () => window.removeEventListener('lucasflix-data-updated', handleDataUpdate);
-  }, []);
-  
-  // Atualiza quando contexto muda
-  useEffect(() => {
+    console.log('📊 Rankings - Dados do contexto atualizados');
     setPeople(contextPeople);
   }, [contextPeople]);
 
@@ -121,26 +106,27 @@ export const Rankings: React.FC = () => {
     });
 
   return (
-    <div className="rankings-page">
-      <motion.div 
-        className="page-header"
-        initial={{ y: -50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      >
-        <motion.h1
-          animate={{ 
-            textShadow: [
-              '0 0 20px rgba(229, 9, 20, 0.5)',
-              '0 0 40px rgba(229, 9, 20, 0.8)',
-              '0 0 20px rgba(229, 9, 20, 0.5)'
-            ]
-          }}
-          transition={{ duration: 2, repeat: Infinity }}
+    <PageTransition>
+      <div className="rankings-page">
+        <motion.div 
+          className="page-header"
+          initial={{ y: -50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5 }}
         >
-          🏆 Rankings
-        </motion.h1>
-      </motion.div>
+          <motion.h1
+            animate={{ 
+              textShadow: [
+                '0 0 20px rgba(229, 9, 20, 0.5)',
+                '0 0 40px rgba(229, 9, 20, 0.8)',
+                '0 0 20px rgba(229, 9, 20, 0.5)'
+              ]
+            }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            🏆 Rankings
+          </motion.h1>
+        </motion.div>
 
       <div className="tabs">
         <motion.button 
@@ -555,5 +541,6 @@ export const Rankings: React.FC = () => {
         </>
       )}
     </div>
+    </PageTransition>
   );
 };

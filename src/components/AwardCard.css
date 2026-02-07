@@ -1,0 +1,275 @@
+.award-card-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 1rem;
+}
+
+.award-card-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 500px;
+  width: 100%;
+}
+
+.award-card-exportable {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a1a2a 50%, #1a1a1a 100%);
+  border: 4px solid;
+  border-radius: 20px;
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.award-card-exportable::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  animation: award-shimmer 3s infinite;
+}
+
+@keyframes award-shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+.award-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.award-logo {
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-shadow: 0 0 20px currentColor;
+}
+
+.award-badge {
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #fff;
+  animation: award-badge-pulse 2s infinite;
+}
+
+@keyframes award-badge-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.award-card-content {
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.award-trophy-big {
+  font-size: 5rem;
+  margin: 0.5rem 0;
+}
+
+.award-title {
+  font-size: 1.8rem;
+  font-weight: 900;
+  margin: 1rem 0 0.5rem 0;
+  letter-spacing: 1px;
+  line-height: 1.2;
+}
+
+.award-description {
+  font-size: 1rem;
+  color: #999;
+  margin-bottom: 2rem;
+}
+
+.award-winner-section {
+  margin: 2rem 0;
+}
+
+.award-avatar-container {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 1rem auto;
+}
+
+.award-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 4px solid;
+  object-fit: cover;
+  position: relative;
+  z-index: 2;
+}
+
+.award-avatar-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 50%;
+  z-index: 1;
+  animation: award-glow-pulse 2s infinite;
+}
+
+@keyframes award-glow-pulse {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+.award-winner-name {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: #fff;
+  margin: 1rem 0;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+.award-stat-box {
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid;
+  border-radius: 12px;
+  padding: 1rem 2rem;
+  margin: 1rem auto;
+  max-width: 300px;
+}
+
+.award-stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.award-card-footer {
+  border-top: 2px solid rgba(255, 255, 255, 0.1);
+  padding-top: 1.5rem;
+  margin-top: 1rem;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.award-quote {
+  font-size: 1rem;
+  font-style: italic;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.award-watermark {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.award-card-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.award-card-actions button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.award-btn-share {
+  color: #fff;
+  flex: 1;
+}
+
+.award-btn-share:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3);
+}
+
+.award-btn-download {
+  background: linear-gradient(135deg, #555, #777);
+  color: #fff;
+  flex: 1;
+}
+
+.award-btn-download:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3);
+}
+
+.award-btn-close {
+  background: transparent;
+  color: #999;
+  border: 2px solid #333;
+  padding: 0.75rem 1.5rem;
+}
+
+.award-btn-close:hover {
+  background: #333;
+  color: #fff;
+  border-color: #555;
+}
+
+@media (max-width: 768px) {
+  .award-card-exportable {
+    padding: 1.5rem;
+  }
+
+  .award-title {
+    font-size: 1.4rem;
+  }
+
+  .award-trophy-big {
+    font-size: 4rem;
+  }
+
+  .award-winner-name {
+    font-size: 1.5rem;
+  }
+
+  .award-card-actions {
+    flex-direction: column;
+  }
+}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useData } from '../context/DataContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { PageTransition } from '../components/PageTransition';
 import './Statistics.css';
 
 export const Statistics: React.FC = () => {
@@ -75,10 +76,11 @@ export const Statistics: React.FC = () => {
     }, [] as any[]);
 
   return (
-    <div className="statistics-page">
-      <div className="page-header">
-        <h1>📊 Estatísticas</h1>
-      </div>
+    <PageTransition>
+      <div className="statistics-page">
+        <div className="page-header">
+          <h1>📊 Estatísticas</h1>
+        </div>
 
       <div className="kpis">
         <div className="kpi-card">
@@ -181,5 +183,6 @@ export const Statistics: React.FC = () => {
         </div>
       </div>
     </div>
+    </PageTransition>
   );
 };
