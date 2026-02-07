@@ -201,6 +201,25 @@
   transform: scale(1.05);
 }
 
+/* Video Card Styles */
+.sleep-card-video {
+  padding: 0;
+  overflow: visible;
+  position: relative;
+}
+
+.sleep-card-video video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+  background: #000;
+}
+
+.sleep-card-video:hover video {
+  box-shadow: 0 8px 32px rgba(229, 9, 20, 0.4);
+}
+
 .sleep-card-overlay {
   position: absolute;
   bottom: 0;

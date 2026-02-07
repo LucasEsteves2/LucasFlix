@@ -6,6 +6,7 @@ import { Row } from '../components/Row';
 import { ShameEntry } from '../data/models';
 import { PageTransition } from '../components/PageTransition';
 import './ShameWall.css';
+import Sono1Image from '../imgs/sonecas/sono1.jpg';
 
 export const ShameWall: React.FC = () => {
   const { shameWall, addShameEntry, updateShameEntry, deleteShameEntry, people, getPerson } = useData();
@@ -195,7 +196,7 @@ export const ShameWall: React.FC = () => {
             <div className="carousel-item">
               <div className="sleep-card sleep-card-photo special-card">
                 <div className="special-badge">⭐ Primeira Soneca Histórica</div>
-                <img src="/src/imgs/sonecas/sono1.jpg" alt="Momento do sono" />
+                <img src={Sono1Image} alt="Momento do sono" />
                 <div className="sleep-card-overlay">
                   <span className="sleep-card-date">😴 Primeira soneca registrada do LucasFlix</span>
                 </div>

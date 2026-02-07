@@ -12,6 +12,9 @@ import LucasAvatar from '../imgs/LucasAvatar.png';
 import MentaAvatar from '../imgs/MentaAvatar.png';
 import ThiagoAvatar from '../imgs/ThiagoAvatar.png';
 import LucaVitoriaAvatar from '../imgs/lucaVitoriaAvatar.png';
+import Sono1Image from '../imgs/sonecas/sono1.jpg';
+import Sono2Image from '../imgs/sonecas/sono2.jpeg';
+import FlexaoVideo from '../imgs/sonecas/flexoes/WhatsApp Video 2026-02-07 at 01.05.46.mp4';
 
 const getAvatar = (name: string) => {
   const firstName = name.split(' ')[0].toLowerCase();
@@ -473,9 +476,27 @@ export const Home: React.FC = () => {
               <div className="carousel-item">
                 <div className="sleep-card sleep-card-photo special-card">
                   <div className="special-badge">⭐ Primeira Soneca Histórica</div>
-                  <img src="/src/imgs/sonecas/sono1.jpg" alt="Momento do sono" />
+                  <img src={Sono1Image} alt="Momento do sono" />
                   <div className="sleep-card-overlay">
                     <span className="sleep-card-date">😴 Primeira soneca registrada do LucasFlix</span>
+                  </div>
+                </div>
+              </div>
+              <div className="carousel-item">
+                <div className="sleep-card sleep-card-video special-card">
+                  <div className="special-badge">🏆 Momento Bodybuilder</div>
+                  <video controls src={FlexaoVideo} />
+                  <div className="sleep-card-overlay">
+                    <span className="sleep-card-date">💪 Só faz flexão quem dorme!</span>
+                  </div>
+                </div>
+              </div>
+              <div className="carousel-item">
+                <div className="sleep-card sleep-card-photo special-card">
+                  <div className="special-badge">👑 Rei da Soneca</div>
+                  <img src={Sono2Image} alt="Sono 2" />
+                  <div className="sleep-card-overlay">
+                    <span className="sleep-card-date">😴 Mais uma vítima do sono</span>
                   </div>
                 </div>
               </div>
@@ -493,6 +514,12 @@ export const Home: React.FC = () => {
               </div>
               <div className="carousel-item">
                 <div className="sleep-card">
+                  <div className="sleep-card-icon">💪</div>
+                  <p>Hall da Flexão</p>
+                </div>
+              </div>
+              <div className="carousel-item">
+                <div className="sleep-card">
                   <div className="sleep-card-icon">🌟</div>
                   <p>Galeria de sonecas</p>
                 </div>
@@ -500,7 +527,7 @@ export const Home: React.FC = () => {
               <div className="carousel-item">
                 <div className="sleep-card">
                   <div className="sleep-card-icon">💫</div>
-                  <p>Em construção</p>
+                  <p>Mais em breve</p>
                 </div>
               </div>
             </div>
@@ -595,6 +622,217 @@ export const Home: React.FC = () => {
             <button className="carousel-btn carousel-btn-right" onClick={() => scrollCarousel('right', photosCarouselRef)} aria-label="Próximo">
               ›
             </button>
+          </div>
+        </div>
+
+        {/* Destaque da Semana - Melhorado */}
+        <div className="weekly-spotlight-section">
+          <motion.div 
+            className="spotlight-header"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="spotlight-title-wrapper">
+              <span className="spotlight-icon">⭐</span>
+              <h2 className="spotlight-title">Destaques da Semana</h2>
+              <span className="spotlight-icon">⭐</span>
+            </div>
+            <p className="spotlight-subtitle">Os melhores momentos dos últimos 7 dias</p>
+          </motion.div>
+          
+          <div className="spotlight-container">
+            {/* MVP Card - Destaque Principal */}
+            <motion.div 
+              className="spotlight-mvp-card"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2, duration: 0.6 }}
+              whileHover={{ y: -10, boxShadow: "0 30px 80px rgba(255, 215, 0, 0.4)" }}
+            >
+              <div className="mvp-crown">👑</div>
+              {(() => {
+                const weekAgo = new Date();
+                weekAgo.setDate(weekAgo.getDate() - 7);
+                const recentSessions = sessions.filter(s => new Date(s.dateISO) >= weekAgo);
+                const scores = people
+                  .filter(p => !p.isAlternative && p.isVisible !== false)
+                  .map(p => ({
+                    person: p,
+                    score: recentSessions.filter(s => 
+                      s.participantIds.includes(p.id) && 
+                      !(s.sleepTimes || []).some(st => st.personId === p.id)
+                    ).length,
+                    participated: recentSessions.filter(s => s.participantIds.includes(p.id)).length
+                  }))
+                  .filter(s => s.participated > 0)
+                  .sort((a, b) => b.score - a.score);
+                
+                const topScore = scores[0]?.score;
+                const mvps = scores.filter(s => s.score === topScore);
+                
+                return mvps.length > 0 ? (
+                  <>
+                    <div className="mvp-badge-float">
+                      {mvps.length > 1 ? `${mvps.length} MVPs DA SEMANA` : 'MVP DA SEMANA'}
+                    </div>
+                    {mvps.length === 1 ? (
+                      <>
+                        <div className="mvp-avatar-wrapper">
+                          <img src={getAvatar(mvps[0].person.name)} alt={mvps[0].person.name} className="mvp-avatar-large" />
+                          <div className="mvp-glow"></div>
+                        </div>
+                        <div className="mvp-details">
+                          <h3 className="mvp-name">{mvps[0].person.name}</h3>
+                          <div className="mvp-stats-grid">
+                            <div className="mvp-stat-item">
+                              <span className="stat-value">{mvps[0].score}</span>
+                              <span className="stat-label">Sessões Acordado</span>
+                            </div>
+                            <div className="mvp-stat-item">
+                              <span className="stat-value">{mvps[0].participated}</span>
+                              <span className="stat-label">Participações</span>
+                            </div>
+                            <div className="mvp-stat-item">
+                              <span className="stat-value">{Math.round((mvps[0].score / mvps[0].participated) * 100)}%</span>
+                              <span className="stat-label">Taxa de Sucesso</span>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="mvp-avatars-grid">
+                          {mvps.map(mvp => (
+                            <div key={mvp.person.id} className="mvp-avatar-item">
+                              <img src={getAvatar(mvp.person.name)} alt={mvp.person.name} className="mvp-avatar-small" />
+                              <div className="mvp-glow-small"></div>
+                              <p className="mvp-name-small">{mvp.person.name}</p>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="mvp-details">
+                          <div className="mvp-stats-grid">
+                            <div className="mvp-stat-item">
+                              <span className="stat-value">{topScore}</span>
+                              <span className="stat-label">Sessões Acordado</span>
+                            </div>
+                            <div className="mvp-stat-item">
+                              <span className="stat-value">{mvps[0].participated}</span>
+                              <span className="stat-label">Participações</span>
+                            </div>
+                            <div className="mvp-stat-item">
+                              <span className="stat-value">{Math.round((topScore / mvps[0].participated) * 100)}%</span>
+                              <span className="stat-label">Taxa de Sucesso</span>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <p className="no-data-message">Aguardando mais sessões para calcular o MVP</p>
+                );
+              })()}
+            </motion.div>
+
+            {/* Cards Secundários */}
+            <div className="spotlight-secondary-grid">
+              {/* Reis do Cochilo */}
+              <motion.div 
+                className="spotlight-card sleep-spotlight"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3, duration: 0.6 }}
+                whileHover={{ scale: 1.05, boxShadow: "0 20px 50px rgba(108, 122, 224, 0.4)" }}
+              >
+                {(() => {
+                  const sleepers = people
+                    .filter(p => !p.isAlternative && p.isVisible !== false)
+                    .map(p => ({
+                      person: p,
+                      naps: p.stats.totalNaps
+                    }))
+                    .sort((a, b) => b.naps - a.naps);
+                  
+                  const topNaps = sleepers[0]?.naps;
+                  const topSleepers = sleepers.filter(s => s.naps === topNaps && s.naps > 0);
+                  
+                  return topSleepers.length > 0 ? (
+                    <>
+                      <div className="card-badge sleepy">
+                        {topSleepers.length > 1 ? `${topSleepers.length} Reis do Cochilo` : 'Rei do Cochilo'}
+                      </div>
+                      <div className="card-icon-large">😴</div>
+                      {topSleepers.length === 1 ? (
+                        <>
+                          <h3 className="card-name">{topSleepers[0].person.name}</h3>
+                          <div className="card-stat-highlight">
+                            <span className="stat-big">{topSleepers[0].naps}</span>
+                            <span className="stat-unit">sonecas registradas</span>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="sleepers-names-list">
+                            {topSleepers.map(s => (
+                              <p key={s.person.id} className="sleeper-name">{s.person.name}</p>
+                            ))}
+                          </div>
+                          <div className="card-stat-highlight">
+                            <span className="stat-big">{topNaps}</span>
+                            <span className="stat-unit">sonecas cada</span>
+                          </div>
+                        </>
+                      )}
+                    </>
+                  ) : <p className="no-data-mini">Nenhuma soneca ainda</p>;
+                })()}
+              </motion.div>
+
+              {/* Melhor Momento */}
+              <motion.div 
+                className="spotlight-card moment-spotlight"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4, duration: 0.6 }}
+                whileHover={{ scale: 1.05, boxShadow: "0 20px 50px rgba(229, 9, 20, 0.4)" }}
+              >
+                <div className="card-badge moment">📸 Momento Épico</div>
+                <div className="moment-photo-wrapper">
+                  <img src={Sono1Image} alt="Melhor momento" className="moment-photo-featured" />
+                  <div className="photo-overlay-gradient"></div>
+                </div>
+                <div className="moment-description">
+                  <p>Primeira soneca histórica do LucasFlix!</p>
+                </div>
+              </motion.div>
+
+              {/* Momento Bodybuilder */}
+              <motion.div 
+                className="spotlight-card moment-spotlight bodybuilder-spotlight"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.5, duration: 0.6 }}
+                whileHover={{ scale: 1.05, boxShadow: "0 20px 50px rgba(229, 9, 20, 0.4)" }}
+              >
+                <div className="card-badge moment">💪 Bodybuilder</div>
+                <div className="moment-photo-wrapper">
+                  <video 
+                    src={FlexaoVideo} 
+                    className="moment-photo-featured" 
+                    autoPlay 
+                    loop 
+                    muted 
+                    playsInline
+                  />
+                  <div className="photo-overlay-gradient"></div>
+                </div>
+                <div className="moment-description">
+                  <p>Momento Bodybuilder Épico! 🏆</p>
+                </div>
+              </motion.div>
+            </div>
           </div>
         </div>
       </div>
