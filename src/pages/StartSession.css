@@ -537,6 +537,56 @@
 }
 
 @media (max-width: 600px) {
+  .start-session {
+    padding: 1rem 0.5rem;
+  }
+  
+  .step-container {
+    padding: 1.5rem 1rem;
+    border-radius: 20px;
+  }
+  
+  .step-title {
+    font-size: 1.5rem;
+  }
+  
+  .step-subtitle {
+    font-size: 0.85rem;
+  }
+  
+  .step-icon {
+    font-size: 2.5rem;
+  }
+  
+  .players-grid,
+  .participants-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.8rem;
+    padding: 0;
+  }
+  
+  .player-card,
+  .participant-card {
+    padding: 0.8rem;
+  }
+  
+  .player-avatar-img,
+  .participant-avatar-img {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .player-name,
+  .participant-name {
+    font-size: 0.85rem;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    padding: 0.8rem 1.5rem;
+    font-size: 0.9rem;
+  }
+  
   .witch-modal {
     max-width: 95%;
     padding: 1rem !important;
@@ -550,6 +600,35 @@
   .witch-btn-cancel,
   .witch-btn-confirm {
     width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .start-session {
+    padding: 0.5rem 0.25rem;
+  }
+  
+  .step-container {
+    padding: 1rem 0.8rem;
+  }
+  
+  .step-title {
+    font-size: 1.2rem;
+  }
+  
+  .step-subtitle {
+    font-size: 0.75rem;
+  }
+  
+  .players-grid,
+  .participants-grid {
+    grid-template-columns: 1fr;
+    gap: 0.6rem;
+  }
+  
+  .player-card,
+  .participant-card {
+    padding: 0.6rem;
   }
 }
 

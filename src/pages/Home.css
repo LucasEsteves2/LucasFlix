@@ -1679,31 +1679,155 @@
 @media (max-width: 768px) {
   .sleep-carousel-section,
   .photos-carousel-section {
-    margin: 3rem 1rem;
+    margin: 2rem 0.5rem;
+    padding: 2rem 0;
   }
   
   .carousel-container {
-    padding: 0 1rem;
+    padding: 0 0.5rem;
   }
   
   .carousel-item {
-    flex: 0 0 280px;
-    height: 240px;
+    flex: 0 0 260px;
+    height: 220px;
   }
   
   .carousel-btn {
-    width: 40px;
-    height: 40px;
-    font-size: 1.5rem;
+    width: 35px;
+    height: 35px;
+    font-size: 1.3rem;
   }
   
   .sleep-icon,
   .photos-icon {
-    font-size: 2rem;
+    font-size: 1.8rem;
   }
   
   .sleep-header h2,
   .photos-header h2 {
+    font-size: 1.3rem;
+  }
+  
+  .start-session-cta {
+    min-height: 300px;
+    padding: 2rem 1rem;
+  }
+  
+  .cta-content {
+    padding: 1.5rem;
+  }
+  
+  .cta-title {
+    font-size: 1.8rem;
+  }
+  
+  .cta-subtitle {
+    font-size: 0.85rem;
+  }
+  
+  /* Rankings mobile */
+  .rankings-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 0 0.5rem;
+  }
+  
+  .ranking-card-compact {
+    min-height: 200px;
+    padding: 1rem;
+  }
+  
+  .rank-avatar {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .rank-name {
+    font-size: 1rem;
+  }
+  
+  .stat-num-large {
+    font-size: 1.8rem;
+  }
+  
+  .stat-label {
+    font-size: 0.7rem;
+  }
+  
+  .trophy-big {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .start-session-cta {
+    min-height: 250px;
+    padding: 1.5rem 0.5rem;
+  }
+  
+  .cta-title {
+    font-size: 1.4rem;
+  }
+  
+  .cta-subtitle {
+    font-size: 0.75rem;
+  }
+  
+  .btn-cta {
+    padding: 0.8rem 1.5rem;
+    font-size: 0.9rem;
+  }
+  
+  .sleep-carousel-section,
+  .photos-carousel-section {
+    margin: 1.5rem 0.25rem;
+    padding: 1.5rem 0;
+  }
+  
+  .sleep-header h2,
+  .photos-header h2 {
+    font-size: 1.1rem;
+  }
+  
+  .carousel-item {
+    flex: 0 0 240px;
+    height: 200px;
+  }
+  
+  .sleep-card,
+  .photo-card {
+    padding: 0.8rem;
+  }
+  
+  .sleep-card h3,
+  .photo-card h3 {
+    font-size: 0.9rem;
+  }
+  
+  .sleep-card p,
+  .photo-card p {
+    font-size: 0.75rem;
+  }
+  
+  .ranking-card-compact {
+    padding: 0.8rem;
+    min-height: 180px;
+  }
+  
+  .rank-avatar {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .rank-name {
+    font-size: 0.9rem;
+  }
+  
+  .stat-num-large {
+    font-size: 1.5rem;
+  }
+  
+  .trophy-big {
     font-size: 1.5rem;
   }
 }

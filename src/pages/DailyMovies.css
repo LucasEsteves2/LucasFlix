@@ -4,6 +4,36 @@
   margin: 0 auto;
 }
 
+@media (max-width: 768px) {
+  .daily-movies-page {
+    padding: 1rem 0.5rem;
+  }
+  
+  .page-header h1 {
+    font-size: 1.8rem;
+  }
+  
+  .movies-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .daily-movies-page {
+    padding: 0.5rem 0.25rem;
+  }
+  
+  .page-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .ranking-badge {
+    font-size: 0.9rem;
+    padding: 0.4rem 0.8rem;
+  }
+}
+
 .ranking-badge {
   position: absolute;
   top: 1rem;

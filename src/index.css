@@ -12,7 +12,14 @@ body {
   background: #141414;
   color: #fff;
   font-size: 14px;
-  zoom: 0.85;
+  zoom: 1;
+  overflow-x: hidden;
+}
+
+@media (min-width: 1200px) {
+  body {
+    zoom: 0.85;
+  }
 }
 
 code {
@@ -46,4 +53,57 @@ button {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
+}
+
+/* ===== RESPONSIVIDADE GLOBAL ===== */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 1.8rem;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+  }
+  
+  h3 {
+    font-size: 1.2rem;
+  }
+  
+  h4 {
+    font-size: 1rem;
+  }
+  
+  button {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    font-size: 13px;
+  }
+  
+  h1 {
+    font-size: 1.5rem;
+  }
+  
+  h2 {
+    font-size: 1.3rem;
+  }
+  
+  h3 {
+    font-size: 1.1rem;
+  }
+  
+  button {
+    font-size: 0.85rem;
+  }
+}
+
+/* Ajustes para touch devices */
+@media (hover: none) and (pointer: coarse) {
+  button, a, .clickable {
+    min-height: 44px;
+    min-width: 44px;
+  }
 }
