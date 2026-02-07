@@ -5,7 +5,6 @@ import { LucasflixData } from './models';
  */
 export const getSeedData = (): LucasflixData => {
   const now = new Date();
-  const today = now.toISOString().split('T')[0];
   
   // Helper to get date N days ago
   const daysAgo = (n: number) => {
@@ -38,7 +37,7 @@ export const getSeedData = (): LucasflixData => {
       { id: 'p5', name: 'Julia', isAlternative: true, stats: emptyStats, achievements: [], lastUpdated: now.toISOString() },
       { id: 'p6', name: 'Valesca', isAlternative: true, stats: emptyStats, achievements: [], lastUpdated: now.toISOString() },
       { id: 'p7', name: 'Vitória', isAlternative: true, stats: emptyStats, achievements: [], lastUpdated: now.toISOString() },
-      { id: 'p8', name: 'Lucca', isAlternative: true, stats: emptyStats, achievements: [], lastUpdated: now.toISOString() },
+      { id: 'p8', name: 'Lucca', isAlternative: true, isVisible: false, stats: emptyStats, achievements: [], lastUpdated: now.toISOString() },
     ],
     
     sessions: [

@@ -75,7 +75,7 @@ export const DailyMovies: React.FC = () => {
   const rankedMovies = [...dailyMovies]
     .map(movie => ({
       ...movie,
-      average: parseFloat(getMovieAverage(movie.id)),
+      average: parseFloat(getMovieAverage(movie.id) || '0'),
       voteCount: getMovieVotes(movie.id).length,
     }))
     .sort((a, b) => {
@@ -146,7 +146,7 @@ export const DailyMovies: React.FC = () => {
               onChange={(e) => setFormData({ ...formData, createdByPersonId: e.target.value })}
               required
             >
-              {people.map(person => (
+              {people.filter(p => p.isVisible !== false).map(person => (
                 <option key={person.id} value={person.id}>{person.name}</option>
               ))}
             </select>
@@ -165,7 +165,7 @@ export const DailyMovies: React.FC = () => {
 
       <Modal isOpen={voteModalOpen} onClose={() => setVoteModalOpen(false)} title={`Votar: ${selectedMovie?.title}`}>
         <div className="vote-modal">
-          {people.map(person => {
+          {people.filter(p => p.isVisible !== false).map(person => {
             const userVote = selectedMovie ? getUserVote(selectedMovie.id, person.id) : null;
             return (
               <div key={person.id} className="vote-person">

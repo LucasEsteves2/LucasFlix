@@ -1,6 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { useData } from '../context/DataContext';
 import { useAlternativeMode } from '../context/AlternativeModeContext';
@@ -48,7 +47,6 @@ export const StartSession: React.FC = () => {
   const { people, addSession, addShameEntry } = useData();
   const { isAlternativeMode, setAlternativeMode } = useAlternativeMode();
   const { checkAndUnlockNew, unlockMultipleAchievements } = useAchievements();
-  const navigate = useNavigate();
   
   // Estado para notificações de conquista
   interface AchievementWithPerson {
@@ -75,8 +73,8 @@ export const StartSession: React.FC = () => {
     console.log('📊 Estado atual:', {
       isAlternativeMode,
       totalPeople: people.length,
-      alternatives: people.filter(p => p.isAlternative).map(p => p.name),
-      regulars: people.filter(p => !p.isAlternative).map(p => p.name),
+      alternatives: people.filter(p => p.isAlternative && p.isVisible !== false).map(p => p.name),
+      regulars: people.filter(p => !p.isAlternative && p.isVisible !== false).map(p => p.name),
     });
   }, [isAlternativeMode, people]);
   const [sessionStarted, setSessionStarted] = useState(false);
@@ -591,7 +589,7 @@ export const StartSession: React.FC = () => {
                 <p className="step-subtitle">Quem vai jogar o aquecimento hoje?</p>
 
               <div className="players-grid">
-                {people.filter(p => !p.isAlternative).map((person, index) => (
+                {people.filter(p => !p.isAlternative && p.isVisible !== false).map((person, index) => (
                   <motion.div
                     key={person.id}
                     className={`player-card ${warmUpPlayer === person.id ? 'selected' : ''}`}
@@ -932,7 +930,7 @@ export const StartSession: React.FC = () => {
               </motion.div>
 
               <div className={`participants-grid ${isAlternativeMode ? 'alternative-mode-active' : ''}`}>
-                {people.filter(p => isAlternativeMode || !p.isAlternative).map((person, index) => (
+                {people.filter(p => (isAlternativeMode || !p.isAlternative) && p.isVisible !== false).map((person, index) => (
                   <motion.div
                     key={person.id}
                     className={`participant-card ${selectedParticipants.includes(person.id) ? 'selected' : ''}`}
@@ -1493,11 +1491,11 @@ export const StartSession: React.FC = () => {
                             <div className="award-winner-avatar-img">
                               <img src={getAvatar(getPerson(longestNap[0])?.name || '')} alt="" />
                             </div>
-                            <p className="award-winner">{getPerson(longestNap[0])?.name}</p>
-                            <p className="award-stat">"Vou ali" durou {formatSleepTime(longestNap[1])} 🚪</p>
+                            <p className="award-winner">{longestNap ? getPerson(longestNap[0])?.name : ''}</p>
+                            <p className="award-stat">"Vou ali" durou {longestNap ? formatSleepTime(longestNap[1]) : '0min'} 🚪</p>
                             <motion.button
                               className="btn-shame-card"
-                              onClick={() => setShowAwardCard({ type: 'longest', personId: longestNap[0], stat: formatSleepTime(longestNap[1]) })}
+                              onClick={() => longestNap && setShowAwardCard({ type: 'longest', personId: longestNap[0], stat: formatSleepTime(longestNap[1]) })}
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
                               style={{ marginTop: '0.75rem', fontSize: '0.85rem', padding: '0.5rem 1rem' }}

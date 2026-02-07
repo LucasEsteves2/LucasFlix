@@ -24,6 +24,7 @@ export interface Person {
   name: string;
   avatarUrl?: string;
   isAlternative?: boolean;
+  isVisible?: boolean; // Feature flag para exibir/ocultar participante
   stats: PersonStats;
   achievements: PersonAchievement[];
   lastUpdated: string; // ISO date

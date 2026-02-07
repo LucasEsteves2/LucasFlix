@@ -5,7 +5,6 @@ import { useAchievements } from '../hooks/useAchievements';
 import { ACHIEVEMENTS, RARITY_COLORS, RARITY_GLOW } from '../data/achievements';
 import { Card } from '../components/Card';
 import { PageTransition } from '../components/PageTransition';
-import { ConfettiExplosion } from '../components/AnimationEffects';
 import './Achievements.css';
 
 // Avatar imports
@@ -34,7 +33,6 @@ export const Achievements: React.FC = () => {
   const [selectedPersonId, setSelectedPersonId] = useState<string>(
     people.filter(p => !p.isAlternative)[0]?.id || ''
   );
-  const [showConfetti, setShowConfetti] = useState(false);
 
   const selectedPerson = people.find(p => p.id === selectedPersonId);
   const achievementsWithStatus = getAllAchievementsWithStatus(selectedPersonId);
@@ -82,7 +80,6 @@ export const Achievements: React.FC = () => {
   return (
     <PageTransition>
       <div className="achievements-page">
-        <ConfettiExplosion trigger={showConfetti} />
         <motion.div 
           className="page-header"
           initial={{ y: -50, opacity: 0 }}
@@ -115,7 +112,7 @@ export const Achievements: React.FC = () => {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
       >
-        {people.filter(p => !p.isAlternative).map((person, index) => (
+        {people.filter(p => !p.isAlternative && p.isVisible !== false).map((person, index) => (
           <motion.button
             key={person.id}
             className={`person-btn ${selectedPersonId === person.id ? 'active' : ''}`}

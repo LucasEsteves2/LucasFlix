@@ -1,11 +1,9 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { useData } from '../context/DataContext';
 import { Row } from '../components/Row';
 import { Card } from '../components/Card';
-import { Badge } from '../components/Badge';
 import { PageTransition } from '../components/PageTransition';
 import './Home.css';
 // Avatar imports
@@ -28,10 +26,9 @@ const getAvatar = (name: string) => {
 };
 
 export const Home: React.FC = () => {
-  const { sessions: contextSessions, shameWall, dailyMovies, votes, people: contextPeople, getPerson } = useData();
+  const { sessions: contextSessions, dailyMovies, votes, people: contextPeople, getPerson } = useData();
   const [sessions, setSessions] = useState(contextSessions);
   const [people, setPeople] = useState(contextPeople);
-  const [forceUpdate, setForceUpdate] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
   const photosCarouselRef = useRef<HTMLDivElement>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -40,7 +37,6 @@ export const Home: React.FC = () => {
   useEffect(() => {
     console.log('🏠 Home - Dados do contexto atualizados');
     console.log('🏠 Total de pessoas:', people.length, 'Total de sessões:', sessions.length);
-    setForceUpdate(prev => prev + 1);
   }, [people, sessions]);
   
   // Atualiza quando contexto muda
@@ -54,15 +50,7 @@ export const Home: React.FC = () => {
     setSessions(contextSessions);
   }, [contextSessions]);
   
-  // IMPORTANTE: Também recarrega quando a rota muda (volta pra Home)
-  useEffect(() => {
-    const handleFocus = () => {
-      console.log('🔄 Home - Window focus, recarregando...');
-      reloadData();
-    };
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
-  }, []);
+
   
   const heroImages = [
     '/src/imgs/Header/amigos.png',
@@ -87,27 +75,10 @@ export const Home: React.FC = () => {
     }
   };
 
-  // Get today's session or next upcoming session
+  // Get today's date
   const today = new Date().toISOString().split('T')[0];
-  const todaySession = sessions.find(s => s.dateISO === today);
-  
-  // If no session today, find the next upcoming one
-  const upcomingSession = !todaySession ? 
-    [...sessions]
-      .filter(s => s.dateISO > today)
-      .sort((a, b) => a.dateISO.localeCompare(b.dateISO))[0] 
-    : null;
 
-  // Get latest sessions (excluding today's/upcoming)
-  const latestSessions = [...sessions]
-    .filter(s => s !== todaySession && s !== upcomingSession)
-    .sort((a, b) => b.dateISO.localeCompare(a.dateISO))
-    .slice(0, 4);
 
-  // Get latest shame entries
-  const latestShame = [...shameWall]
-    .sort((a, b) => b.dateISO.localeCompare(a.dateISO))
-    .slice(0, 4);
 
   // Calculate most awake ranking (filtra alternativos)
   const awakeRanking = people
@@ -144,8 +115,6 @@ export const Home: React.FC = () => {
     const sum = movieVotes.reduce((acc, v) => acc + v.stars, 0);
     return (sum / movieVotes.length).toFixed(1);
   };
-
-  const featuredMovie = latestMovies[0];
 
   return (
     <PageTransition>
@@ -496,7 +465,7 @@ export const Home: React.FC = () => {
           </div>
           
           <div className="carousel-container">
-            <button className="carousel-btn carousel-btn-left" onClick={() => scrollCarousel('left')} aria-label="Anterior">
+            <button className="carousel-btn carousel-btn-left" onClick={() => scrollCarousel('left', carouselRef)} aria-label="Anterior">
               ‹
             </button>
             

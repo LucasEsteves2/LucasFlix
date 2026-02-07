@@ -109,7 +109,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         { id: 'p5', name: 'Julia', isAlternative: true, stats: emptyStats, achievements: [], lastUpdated: now },
         { id: 'p6', name: 'Valesca', isAlternative: true, stats: emptyStats, achievements: [], lastUpdated: now },
         { id: 'p7', name: 'Vitória', isAlternative: true, stats: emptyStats, achievements: [], lastUpdated: now },
-        { id: 'p8', name: 'Lucca', isAlternative: true, stats: emptyStats, achievements: [], lastUpdated: now },
+        { id: 'p8', name: 'Lucca', isAlternative: true, isVisible: false, stats: emptyStats, achievements: [], lastUpdated: now },
       ];
       
       let needsUpdate = false;
@@ -457,7 +457,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const currentData = storedData ? JSON.parse(storedData) : data;
     
     const today = new Date().toISOString().split('T')[0];
-    const filtered = currentData.dailyMovies.filter(m => m.dateISO !== today);
+    const filtered = currentData.dailyMovies.filter((m: any) => m.dateISO !== today);
     const updatedData = { ...currentData, dailyMovies: filtered };
     localStorage.setItem('lucasflix_data', JSON.stringify(updatedData));
     saveData(updatedData);

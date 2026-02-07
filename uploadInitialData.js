@@ -187,6 +187,7 @@ const initialData = {
       "id": "p8",
       "name": "Lucca",
       "isAlternative": true,
+      "isVisible": false,
       "stats": {
         "totalSessions": 1,
         "totalSurvived": 0,

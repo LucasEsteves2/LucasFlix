@@ -134,7 +134,7 @@ export const Statistics: React.FC = () => {
                   labelStyle={{ color: '#fff' }}
                 />
                 <Legend />
-                {people.map((person, index) => (
+                {people.filter(p => p.isVisible !== false).map((person, index) => (
                   <Line 
                     key={person.id}
                     type="monotone" 
