@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { ref, onValue, set, update, remove } from 'firebase/database';
+import { database } from '../firebaseConfig';
 import { LucasflixData, Person, Session, DailyMovie, Vote, ShameEntry, PersonStats } from '../data/models';
 import { IDataStore } from '../data/IDataStore';
 import { FirebaseDataStore } from '../data/FirebaseDataStore';
@@ -20,6 +22,13 @@ interface DataContextType {
   addSession: (session: Omit<Session, 'id'>) => Session;
   updateSession: (id: string, session: Partial<Session>) => void;
   deleteSession: (id: string) => void;
+  
+  // Active Session
+  activeSession: any | null;
+  saveActiveSession: (sessionData: any) => Promise<void>;
+  updateActiveSession: (updates: any) => Promise<void>;
+  clearActiveSession: () => Promise<void>;
+  finalizeActiveSession: (finalData?: any) => Promise<void>;
   
   // Shame Wall
   shameWall: ShameEntry[];
@@ -66,10 +75,23 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     shameWall: [],
   });
   const [loading, setLoading] = useState(true);
+  const [activeSession, setActiveSession] = useState<any | null>(null);
 
   // Load data on mount
   useEffect(() => {
     loadData();
+  }, []);
+
+  // Listener para sessão ativa
+  useEffect(() => {
+    const activeSessionRef = ref(database, 'activeSession');
+    
+    const unsubscribe = onValue(activeSessionRef, (snapshot) => {
+      const data = snapshot.val();
+      setActiveSession(data);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const loadData = async () => {
@@ -525,6 +547,43 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     saveData(emptyData);
   };
 
+  // Funções para gerenciar sessão ativa (temporária)
+  const saveActiveSession = async (sessionData: any) => {
+    const activeSessionRef = ref(database, 'activeSession');
+    await set(activeSessionRef, {
+      ...sessionData,
+      createdAt: Date.now(),
+    });
+  };
+
+  const updateActiveSession = async (updates: any) => {
+    const activeSessionRef = ref(database, 'activeSession');
+    await update(activeSessionRef, {
+      ...updates,
+      updatedAt: Date.now(),
+    });
+  };
+
+  const clearActiveSession = async () => {
+    const activeSessionRef = ref(database, 'activeSession');
+    await remove(activeSessionRef);
+  };
+
+  const finalizeActiveSession = async (finalData?: any) => {
+    if (!activeSession && !finalData) return;
+
+    const sessionToSave = finalData || activeSession;
+
+    // Remove campos temporários
+    const { createdAt, updatedAt, ...cleanSession } = sessionToSave;
+    
+    // Salvar como sessão definitiva usando addSession
+    addSession(cleanSession);
+    
+    // Limpar sessão ativa
+    await clearActiveSession();
+  };
+
   const value: DataContextType = {
     data,
     loading,
@@ -537,6 +596,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     addSession,
     updateSession,
     deleteSession,
+    activeSession,
+    saveActiveSession,
+    updateActiveSession,
+    clearActiveSession,
+    finalizeActiveSession,
     shameWall: data.shameWall,
     addShameEntry,
     updateShameEntry,

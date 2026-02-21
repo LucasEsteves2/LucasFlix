@@ -13,6 +13,7 @@ import { KingCard } from '../components/KingCard';
 import { AwardCard } from '../components/AwardCard';
 import { SessionSummaryCard } from '../components/SessionSummaryCard';
 import { Achievement } from '../data/achievements';
+import { useLocation } from 'react-router-dom';
 import './StartSession.css';
 import './Awards.css';
 
@@ -44,9 +45,18 @@ const getAvatar = (name: string) => {
 type WarmUpResult = 'GANHOU' | 'PERDEU' | 'EMPATE' | null;
 
 export const StartSession: React.FC = () => {
-  const { people, addSession, addShameEntry } = useData();
+  const { 
+    people, 
+    addShameEntry,
+    activeSession,
+    saveActiveSession,
+    updateActiveSession,
+    finalizeActiveSession 
+  } = useData();
   const { isAlternativeMode, setAlternativeMode } = useAlternativeMode();
   const { checkAndUnlockNew, unlockMultipleAchievements } = useAchievements();
+  const location = useLocation();
+  const continueSession = (location.state as any)?.continueSession;
   
   // Estado para notificações de conquista
   interface AchievementWithPerson {
@@ -61,6 +71,51 @@ export const StartSession: React.FC = () => {
     console.log('🔧 Resetando modo alternativo para FALSE');
     setAlternativeMode(false);
   }, []); // Executa apenas uma vez ao montar
+
+  // Carregar sessão ativa ao continuar
+  useEffect(() => {
+    if (continueSession && activeSession) {
+      console.log('🔄 Continuando sessão ativa:', activeSession);
+      
+      // Restaurar estado básico
+      setStep(activeSession.step || 1);
+      setWarmUpPlayer(activeSession.warmUpPlayer || null);
+      setWarmUpDone(activeSession.warmUpDone || false);
+      setWarmUpResult(activeSession.warmUpResult || null);
+      setSelectedParticipants(activeSession.selectedParticipants || []);
+      setSessionStarted(activeSession.sessionStarted || false);
+      setSleepers(activeSession.sleepers || []);
+      setRescued(activeSession.rescued || []);
+      setNaps(activeSession.naps || {});
+      setTotalSleepTime(activeSession.totalSleepTime || {});
+      setSleepTimes(activeSession.sleepTimes || []);
+      
+      // Restaurar timestamps
+      if (activeSession.sessionStartTime) {
+        setSessionStartTime(new Date(activeSession.sessionStartTime));
+      }
+      
+      if (activeSession.sleepStartTimes) {
+        const restored: Record<string, Date> = {};
+        Object.entries(activeSession.sleepStartTimes).forEach(([id, timestamp]: [string, any]) => {
+          restored[id] = new Date(timestamp);
+        });
+        setSleepStartTimes(restored);
+      }
+      
+      if (activeSession.awakeStartTimes) {
+        const restored: Record<string, Date> = {};
+        Object.entries(activeSession.awakeStartTimes).forEach(([id, timestamp]: [string, any]) => {
+          restored[id] = new Date(timestamp);
+        });
+        setAwakeStartTimes(restored);
+      }
+      
+      if (activeSession.isAlternativeMode) {
+        setAlternativeMode(activeSession.isAlternativeMode);
+      }
+    }
+  }, [continueSession, activeSession]);
 
   const [step, setStep] = useState(1);
   const [warmUpPlayer, setWarmUpPlayer] = useState<string | null>(null);
@@ -314,6 +369,27 @@ export const StartSession: React.FC = () => {
       initialAwakeTimes[personId] = startTime;
     });
     setAwakeStartTimes(initialAwakeTimes);
+    
+    // Salvar sessão ativa no Firebase
+    saveActiveSession({
+      step: 3,
+      warmUpPlayer,
+      warmUpDone,
+      warmUpResult,
+      selectedParticipants,
+      sessionStarted: true,
+      sessionStartTime: startTime.toISOString(),
+      sleepers: [],
+      rescued: [],
+      naps: {},
+      totalSleepTime: {},
+      sleepTimes: [],
+      sleepStartTimes: {},
+      awakeStartTimes: Object.fromEntries(
+        Object.entries(initialAwakeTimes).map(([id, date]) => [id, date.toISOString()])
+      ),
+      isAlternativeMode,
+    });
   };
 
   const handleMarkAsleep = (personId: string) => {
@@ -321,26 +397,21 @@ export const StartSession: React.FC = () => {
       const now = new Date();
       const timeString = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
       
-      setSleepers(prev => [...prev, personId]);
-      setSleepTimes(prev => [...prev, { personId, time: timeString }]);
+      const newSleepers = [...sleepers, personId];
+      const newSleepTimes = [...sleepTimes, { personId, time: timeString }];
+      const newSleepStartTimes = { ...sleepStartTimes, [personId]: now };
+      const newNaps = { ...naps, [personId]: (naps[personId] || 0) + 1 };
       
-      // Registra quando começou a dormir
-      setSleepStartTimes(prev => ({
-        ...prev,
-        [personId]: now
-      }));
+      setSleepers(newSleepers);
+      setSleepTimes(newSleepTimes);
+      setSleepStartTimes(newSleepStartTimes);
+      setNaps(newNaps);
       
       // Remove o timer de resistência
       setAwakeTimers(prev => {
         const { [personId]: _, ...rest } = prev;
         return rest;
       });
-      
-      // Incrementa contador de cochilos
-      setNaps(prev => ({
-        ...prev,
-        [personId]: (prev[personId] || 0) + 1
-      }));
       
       // Registra tempo até primeiro cochilo (se for o primeiro)
       if (!firstSleepDelay[personId] && awakeStartTimes[personId]) {
@@ -352,21 +423,38 @@ export const StartSession: React.FC = () => {
       }
       
       // Remove do rescued se estava
-      setRescued(prev => prev.filter(id => id !== personId));
+      const newRescued = rescued.filter(id => id !== personId);
+      setRescued(newRescued);
+      
+      // Atualizar activeSession
+      updateActiveSession({
+        sleepers: newSleepers,
+        sleepTimes: newSleepTimes,
+        naps: newNaps,
+        rescued: newRescued,
+        sleepStartTimes: Object.fromEntries(
+          Object.entries(newSleepStartTimes).map(([id, date]) => [id, date.toISOString()])
+        ),
+      });
     }
   };
 
   const handleRescue = (personId: string) => {
     const now = new Date();
     
+    let newTotalSleepTime = { ...totalSleepTime };
+    const newSleepStartTimes = { ...sleepStartTimes };
+    
     // Calcula tempo dormindo
     if (sleepStartTimes[personId]) {
       const sleepDuration = (now.getTime() - sleepStartTimes[personId].getTime()) / (1000 * 60); // em minutos
       
-      setTotalSleepTime(prev => ({
-        ...prev,
-        [personId]: (prev[personId] || 0) + sleepDuration
-      }));
+      newTotalSleepTime = {
+        ...newTotalSleepTime,
+        [personId]: (newTotalSleepTime[personId] || 0) + sleepDuration
+      };
+      
+      setTotalSleepTime(newTotalSleepTime);
       
       // Registra duração deste cochilo específico
       setIndividualNapDurations(prev => ({
@@ -375,10 +463,8 @@ export const StartSession: React.FC = () => {
       }));
       
       // Remove o timestamp de início do sono
-      setSleepStartTimes(prev => {
-        const { [personId]: _, ...rest } = prev;
-        return rest;
-      });
+      delete newSleepStartTimes[personId];
+      setSleepStartTimes(newSleepStartTimes);
     }
     
     // Remove o timer de sono
@@ -387,14 +473,27 @@ export const StartSession: React.FC = () => {
       return rest;
     });
     
-    // Reinicia o contador de resistência
-    setAwakeStartTimes(prev => ({
-      ...prev,
-      [personId]: now
-    }));
+    const newAwakeStartTimes = { ...awakeStartTimes, [personId]: now };
+    const newRescued = [...rescued, personId];
+    const newSleepers = sleepers.filter(id => id !== personId);
     
-    setRescued(prev => [...prev, personId]);
-    setSleepers(prev => prev.filter(id => id !== personId));
+    // Reinicia o contador de resistência
+    setAwakeStartTimes(newAwakeStartTimes);
+    setRescued(newRescued);
+    setSleepers(newSleepers);
+    
+    // Atualizar activeSession
+    updateActiveSession({
+      totalSleepTime: newTotalSleepTime,
+      awakeStartTimes: Object.fromEntries(
+        Object.entries(newAwakeStartTimes).map(([id, date]) => [id, date.toISOString()])
+      ),
+      rescued: newRescued,
+      sleepers: newSleepers,
+      sleepStartTimes: Object.fromEntries(
+        Object.entries(newSleepStartTimes).map(([id, date]) => [id, date.toISOString()])
+      ),
+    });
     
     // Após 3 segundos, remove o estado de resgatado
     setTimeout(() => {
@@ -428,7 +527,7 @@ export const StartSession: React.FC = () => {
       sleepTime: sleepTimes.find(st => st.personId === personId)?.time
     }));
     
-    const newSession = addSession({
+    const sessionData = {
       dateISO: today,
       participantIds: selectedParticipants, // manter para compatibilidade
       participants, // NOVA estrutura centralizada
@@ -442,7 +541,10 @@ export const StartSession: React.FC = () => {
       firstSleeperPersonId: firstSleeperId,
       naps: naps,
       totalSleepTime: updatedSleepTimes,
-    });
+    };
+    
+    // Usar finalizeActiveSession ao invés de addSession diretamente
+    await finalizeActiveSession(sessionData);
 
     // Salva entradas no mural da vergonha
     sleepTimes.forEach(({ personId, time }) => {
@@ -480,7 +582,7 @@ export const StartSession: React.FC = () => {
           allAchievementsToUnlock.push({
             personId,
             achievementId: achievement.id,
-            sessionId: newSession.id,
+            sessionId: sessionData.dateISO, // Usar dateISO como fallback
           });
         });
       }

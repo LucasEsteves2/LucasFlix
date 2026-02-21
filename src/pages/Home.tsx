@@ -1,10 +1,11 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useData } from '../context/DataContext';
 import { Row } from '../components/Row';
 import { Card } from '../components/Card';
 import { PageTransition } from '../components/PageTransition';
+import { Modal } from '../components/Modal';
 import './Home.css';
 // Avatar imports
 import DiegoAvatar from '../imgs/DiegoAvatar.png';
@@ -29,12 +30,22 @@ const getAvatar = (name: string) => {
 };
 
 export const Home: React.FC = () => {
-  const { sessions: contextSessions, dailyMovies, votes, people: contextPeople, getPerson } = useData();
+  const { 
+    sessions: contextSessions, 
+    dailyMovies, 
+    votes, 
+    people: contextPeople, 
+    getPerson,
+    activeSession,
+    clearActiveSession 
+  } = useData();
+  const navigate = useNavigate();
   const [sessions, setSessions] = useState(contextSessions);
   const [people, setPeople] = useState(contextPeople);
   const carouselRef = useRef<HTMLDivElement>(null);
   const photosCarouselRef = useRef<HTMLDivElement>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showSessionModal, setShowSessionModal] = useState(false);
   
   // Atualiza states locais quando o contexto muda
   useEffect(() => {
@@ -75,6 +86,15 @@ export const Home: React.FC = () => {
         left: direction === 'left' ? -scrollAmount : scrollAmount,
         behavior: 'smooth'
       });
+    }
+  };
+
+  // Função para verificar sessão ativa ao iniciar nova
+  const handleStartSession = () => {
+    if (activeSession) {
+      setShowSessionModal(true);
+    } else {
+      navigate('/start-session');
     }
   };
 
@@ -188,16 +208,16 @@ export const Home: React.FC = () => {
             <p className="cta-subtitle">Seus momentos de cinema com os amigos</p>
           </motion.div>
           
-          <Link to="/start-session" className="cta-button-wrapper">
-            <motion.button 
-              className="btn-cta-enhanced"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.6, duration: 0.6 }}
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <span className="btn-cta-glow"></span>
+          <motion.button 
+            className="btn-cta-enhanced"
+            onClick={handleStartSession}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.6, duration: 0.6 }}
+            whileHover={{ scale: 1.05, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <span className="btn-cta-glow"></span>
               <span className="btn-cta-icon">🎬</span>
               <span className="btn-cta-text">Iniciar Sessão</span>
               <motion.span 
@@ -208,7 +228,6 @@ export const Home: React.FC = () => {
                 →
               </motion.span>
             </motion.button>
-          </Link>
         </div>
         
         <div className="slideshow-indicators">
@@ -837,6 +856,64 @@ export const Home: React.FC = () => {
         </div>
       </div>
     </div>
+
+    {/* Modal de Sessão Ativa */}
+    <Modal 
+      isOpen={showSessionModal} 
+      onClose={() => setShowSessionModal(false)}
+      title="⚠️ Sessão em Andamento"
+    >
+        <div style={{ textAlign: 'center', padding: '20px' }}>
+          <p style={{ marginBottom: '30px', fontSize: '16px', opacity: 0.9 }}>
+            Você já tem uma sessão aberta. Deseja continuar de onde parou?
+          </p>
+          
+          <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+            <button
+              className="btn-secondary"
+              onClick={async () => {
+                await clearActiveSession();
+                setShowSessionModal(false);
+                navigate('/start-session');
+              }}
+              style={{
+                padding: '12px 24px',
+                fontSize: '16px',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                borderRadius: '8px',
+                color: 'white',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease'
+              }}
+            >
+              Não, iniciar nova
+            </button>
+            
+            <button
+              className="btn-primary"
+              onClick={() => {
+                setShowSessionModal(false);
+                navigate('/start-session', { state: { continueSession: true } });
+              }}
+              style={{
+                padding: '12px 24px',
+                fontSize: '16px',
+                background: 'linear-gradient(135deg, #6C7AE0 0%, #5563C1 100%)',
+                border: 'none',
+                borderRadius: '8px',
+                color: 'white',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                fontWeight: '600'
+              }}
+            >
+              Sim, continuar
+            </button>
+          </div>
+        </div>
+      </Modal>
+
     </PageTransition>
   );
 };
